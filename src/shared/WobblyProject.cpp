@@ -158,7 +158,7 @@ namespace Keys {
 
 WobblyProject::WobblyProject(bool _is_wobbly)
     : is_wobbly(_is_wobbly)
-    , pattern_guessing{ PatternGuessingFromMics, 10, UseThirdNMatchNever, DropFirstDuplicate, PatternCCCNN | PatternCCNNN | PatternCCCCC, FailedPatternGuessingMap() }
+    , pattern_guessing{ PatternGuessingFromMics, 10, 1, UseThirdNMatchNever, DropFirstDuplicate, PatternCCCNN | PatternCCNNN | PatternCCCCC, FailedPatternGuessingMap() }
     , combed_frames(new CombedFramesModel(this))
     , frozen_frames(new FrozenFramesModel(this))
     , presets(new PresetsModel(this))
@@ -2911,7 +2911,7 @@ void WobblyProject::applyPatternGuessingDecimation(const int section_start, cons
 }
 
 
-bool WobblyProject::guessSectionPatternsFromMics(int section_start, int minimum_length, int use_patterns, int drop_duplicate) {
+bool WobblyProject::guessSectionPatternsFromMics(int section_start, int minimum_length, int edge_cutoff, int use_patterns, int drop_duplicate) {
     if (!mics.size())
         throw WobblyException("Can't guess patterns from mics because there are no mics in the project.");
 
@@ -2924,7 +2924,7 @@ bool WobblyProject::guessSectionPatternsFromMics(int section_start, int minimum_
 
     int section_end = getSectionEnd(section_start);
 
-    if (section_end - section_start < minimum_length) {
+    if ((section_end - section_start - 2 * edge_cutoff) < minimum_length) {
         FailedPatternGuessing failure;
         failure.start = section_start;
         failure.reason = SectionTooShort;
@@ -2962,7 +2962,7 @@ bool WobblyProject::guessSectionPatternsFromMics(int section_start, int minimum_
         for (int pattern_offset = 0; pattern_offset < (int)patterns[p].pattern.size(); pattern_offset++) {
             int mic_dev = 0;
 
-            for (int frame = section_start; frame < section_end; frame++) {
+            for (int frame = section_start + edge_cutoff; frame < section_end - edge_cutoff; frame++) {
                 char pattern_match = patterns[p].pattern[(frame + pattern_offset) % patterns[p].pattern.size()];
                 char other_match = pattern_match == 'c' ? 'n' : 'c';
 
@@ -2986,7 +2986,7 @@ bool WobblyProject::guessSectionPatternsFromMics(int section_start, int minimum_
         }
     }
 
-    if (patterns[best_pattern].mic_dev > section_end - section_start) {
+    if (patterns[best_pattern].mic_dev > (section_end - section_start - 2 * edge_cutoff)) {
         FailedPatternGuessing failure;
         failure.start = section_start;
         failure.reason = AmbiguousMatchPattern;
@@ -3028,7 +3028,7 @@ bool WobblyProject::guessSectionPatternsFromMics(int section_start, int minimum_
     return true;
 }
 
-bool WobblyProject::guessSectionPatternsFromDMetrics(int section_start, int minimum_length, int use_patterns, int drop_duplicate) {
+bool WobblyProject::guessSectionPatternsFromDMetrics(int section_start, int minimum_length, int edge_cutoff, int use_patterns, int drop_duplicate) {
     if (!mics.size())
         throw WobblyException("Can't guess patterns from dmetrics because there are no dmetrics in the project.");
 
@@ -3041,7 +3041,7 @@ bool WobblyProject::guessSectionPatternsFromDMetrics(int section_start, int mini
 
     int section_end = getSectionEnd(section_start);
 
-    if (section_end - section_start < minimum_length) {
+    if ((section_end - section_start - 2 * edge_cutoff) < minimum_length) {
         FailedPatternGuessing failure;
         failure.start = section_start;
         failure.reason = SectionTooShort;
@@ -3081,7 +3081,7 @@ bool WobblyProject::guessSectionPatternsFromDMetrics(int section_start, int mini
             int32_t mmet_dev = 0;
             int32_t vmet_dev = 0;
 
-            for (int frame = section_start + 1; frame < section_end - 1; frame++) {
+            for (int frame = section_start + edge_cutoff; frame < section_end - edge_cutoff; frame++) {
                 char pattern_match = patterns[p].pattern[(frame + pattern_offset) % patterns[p].pattern.size()];
                 char other_match = pattern_match == 'c' ? 'n' : 'c';
 
@@ -3111,7 +3111,7 @@ bool WobblyProject::guessSectionPatternsFromDMetrics(int section_start, int mini
     }
 
 
-    if (section_end - section_start < patterns[best_pattern].vmet_dev) {
+    if ((section_end - section_start - 2 * edge_cutoff) < patterns[best_pattern].vmet_dev) {
         FailedPatternGuessing failure;
         failure.start = section_start;
         failure.reason = AmbiguousMatchPattern;
@@ -3152,14 +3152,15 @@ bool WobblyProject::guessSectionPatternsFromDMetrics(int section_start, int mini
     return true;
 }
 
-void WobblyProject::guessProjectPatternsFromMics(int minimum_length, int use_patterns, int drop_duplicate) {
+void WobblyProject::guessProjectPatternsFromMics(int minimum_length, int edge_cutoff, int use_patterns, int drop_duplicate) {
     pattern_guessing.failures.clear();
 
     for (auto it = sections->cbegin(); it != sections->cend(); it++)
-        guessSectionPatternsFromMics(it->second.start, minimum_length, use_patterns, drop_duplicate);
+        guessSectionPatternsFromMics(it->second.start, minimum_length, edge_cutoff, use_patterns, drop_duplicate);
 
     pattern_guessing.method = PatternGuessingFromMics;
     pattern_guessing.minimum_length = minimum_length;
+    pattern_guessing.edge_cutoff = edge_cutoff;
     pattern_guessing.use_patterns = use_patterns;
     pattern_guessing.decimation = drop_duplicate;
 
@@ -3167,21 +3168,22 @@ void WobblyProject::guessProjectPatternsFromMics(int minimum_length, int use_pat
 }
 
 
-void WobblyProject::guessProjectPatternsFromDMetrics(int minimum_length, int use_patterns, int drop_duplicate) {
+void WobblyProject::guessProjectPatternsFromDMetrics(int minimum_length, int edge_cutoff, int use_patterns, int drop_duplicate) {
     pattern_guessing.failures.clear();
 
     for (auto it = sections->cbegin(); it != sections->cend(); it++)
-        guessSectionPatternsFromDMetrics(it->second.start, minimum_length, use_patterns, drop_duplicate);
+        guessSectionPatternsFromDMetrics(it->second.start, minimum_length, edge_cutoff, use_patterns, drop_duplicate);
 
     pattern_guessing.method = PatternGuessingFromDMetrics;
     pattern_guessing.minimum_length = minimum_length;
+    pattern_guessing.edge_cutoff = edge_cutoff;
     pattern_guessing.use_patterns = use_patterns;
     pattern_guessing.decimation = drop_duplicate;
 
     setModified(true);
 }
 
-bool WobblyProject::guessSectionPatternsFromMatches(int section_start, int minimum_length, int use_third_n_match, int drop_duplicate) {
+bool WobblyProject::guessSectionPatternsFromMatches(int section_start, int minimum_length, int edge_cutoff, int use_third_n_match, int drop_duplicate) {
     if (section_start < 0 || section_start >= getNumFrames(PostSource))
         throw WobblyException("Can't guess patterns from matches for section starting at " + std::to_string(section_start) + ": frame number out of range.");
 
@@ -3190,7 +3192,7 @@ bool WobblyProject::guessSectionPatternsFromMatches(int section_start, int minim
 
     int section_end = getSectionEnd(section_start);
 
-    if (section_end - section_start < minimum_length) {
+    if ((section_end - section_start - 2 * edge_cutoff) < minimum_length) {
         FailedPatternGuessing failure;
         failure.start = section_start;
         failure.reason = SectionTooShort;
@@ -3206,7 +3208,7 @@ bool WobblyProject::guessSectionPatternsFromMatches(int section_start, int minim
     int positions[5] = { 0 };
     int total = 0;
 
-    for (int i = section_start; i < std::min(section_end, getNumFrames(PostSource) - 1); i++) {
+    for (int i = section_start + edge_cutoff; i < std::min(section_end, getNumFrames(PostSource) - 1) - edge_cutoff; i++) {
         if (getOriginalMatch(i) == 'n' && getOriginalMatch(i + 1) == 'c') {
             positions[i % 5]++;
             total++;
@@ -3247,7 +3249,7 @@ bool WobblyProject::guessSectionPatternsFromMatches(int section_start, int minim
     // Totally arbitrary thresholds.
     if (best_percent > 40.0f && best_percent - next_best_percent > 10.0f) {
         // Take care of decimation first.
-        applyPatternGuessingDecimation(section_start, section_end, best, drop_duplicate);
+        applyPatternGuessingDecimation(section_start + edge_cutoff, section_end - edge_cutoff, best, drop_duplicate);
 
 
         // Now the matches.
@@ -3258,7 +3260,7 @@ bool WobblyProject::guessSectionPatternsFromMatches(int section_start, int minim
 
         const std::string &pattern = patterns[best];
 
-        for (int i = section_start; i < section_end; i++) {
+        for (int i = section_start + edge_cutoff; i < section_end - edge_cutoff; i++) {
             if (use_third_n_match == UseThirdNMatchIfPrettier && pattern[i % 5] == 'c' && pattern[(i + 1) % 5] == 'n') {
                 int16_t mic_n = getMics(i)[matchCharToIndex('n')];
                 int16_t mic_c = getMics(i)[matchCharToIndex('c')];
@@ -3299,14 +3301,15 @@ bool WobblyProject::guessSectionPatternsFromMatches(int section_start, int minim
 }
 
 
-void WobblyProject::guessProjectPatternsFromMatches(int minimum_length, int use_third_n_match, int drop_duplicate) {
+void WobblyProject::guessProjectPatternsFromMatches(int minimum_length, int edge_cutoff, int use_third_n_match, int drop_duplicate) {
     pattern_guessing.failures.clear();
 
     for (auto it = sections->cbegin(); it != sections->cend(); it++)
-        guessSectionPatternsFromMatches(it->second.start, minimum_length, use_third_n_match, drop_duplicate);
+        guessSectionPatternsFromMatches(it->second.start, minimum_length, edge_cutoff, use_third_n_match, drop_duplicate);
 
     pattern_guessing.method = PatternGuessingFromMatches;
     pattern_guessing.minimum_length = minimum_length;
+    pattern_guessing.edge_cutoff = edge_cutoff;
     pattern_guessing.third_n_match = use_third_n_match;
     pattern_guessing.decimation = drop_duplicate;
 

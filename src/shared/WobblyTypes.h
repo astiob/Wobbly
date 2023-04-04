@@ -177,6 +177,7 @@ enum PatternGuessingMethods {
 struct PatternGuessing {
     int method;
     int minimum_length;
+    int edge_cutoff;
     int third_n_match;
     int decimation;
     int use_patterns;

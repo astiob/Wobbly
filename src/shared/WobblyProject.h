@@ -331,14 +331,14 @@ class WobblyProject : public QObject {
         int frameNumberBeforeDecimation(int frame) const;
 
 
-        bool guessSectionPatternsFromMics(int section_start, int minimum_length, int use_patterns, int drop_duplicate);
-        void guessProjectPatternsFromMics(int minimum_length, int use_patterns, int drop_duplicate);
+        bool guessSectionPatternsFromMics(int section_start, int minimum_length, int edge_cutoff, int use_patterns, int drop_duplicate);
+        void guessProjectPatternsFromMics(int minimum_length, int edge_cutoff, int use_patterns, int drop_duplicate);
 
-        bool guessSectionPatternsFromDMetrics(int section_start, int minimum_length, int use_patterns, int drop_duplicate);
-        void guessProjectPatternsFromDMetrics(int minimum_length, int use_patterns, int drop_duplicate);
+        bool guessSectionPatternsFromDMetrics(int section_start, int minimum_length, int edge_cutoff, int use_patterns, int drop_duplicate);
+        void guessProjectPatternsFromDMetrics(int minimum_length, int edge_cutoff, int use_patterns, int drop_duplicate);
 
-        bool guessSectionPatternsFromMatches(int section_start, int minimum_length, int use_third_n_match, int drop_duplicate);
-        void guessProjectPatternsFromMatches(int minimum_length, int use_third_n_match, int drop_duplicate);
+        bool guessSectionPatternsFromMatches(int section_start, int minimum_length, int edge_cutoff, int use_third_n_match, int drop_duplicate);
+        void guessProjectPatternsFromMatches(int minimum_length, int edge_cutoff, int use_third_n_match, int drop_duplicate);
         const PatternGuessing &getPatternGuessing();
 
 
