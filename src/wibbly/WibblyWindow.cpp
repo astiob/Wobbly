@@ -1064,7 +1064,7 @@ void WibblyWindow::createSettingsWindow() {
 
     settings_cache_spin = new QSpinBox;
     settings_cache_spin->setRange(1, 99999);
-    settings_cache_spin->setValue(200);
+    settings_cache_spin->setValue(4096);
     settings_cache_spin->setPrefix(QStringLiteral("Maximum cache size: "));
     settings_cache_spin->setSuffix(QStringLiteral(" MiB"));
 
