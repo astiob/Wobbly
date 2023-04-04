@@ -1839,6 +1839,8 @@ void WobblyProject::cycleMatchBCN(int frame) {
     } else if (match == 'b') {
         if (frame == getNumFrames(PostSource) - 1)
             match = 'c';
+        else if (frame == getSectionEnd(frame))
+            match = 'b';
         else
             match = 'n';
     }
@@ -1865,6 +1867,8 @@ void WobblyProject::cycleMatch(int frame) {
     } else if (match == 'b') {
         if (frame == getNumFrames(PostSource) - 1)
             match = 'c';
+        else if (frame == getSectionEnd(frame))
+            match = 'b';
         else
             match = 'n';
     } else if (match == 'n') {
@@ -2052,12 +2056,14 @@ void WobblyProject::setRangeMatchesFromPattern(int range_start, int range_end, c
         throw WobblyException("Can't apply match pattern to frames [" + std::to_string(range_start) + "," + std::to_string(range_end) + "]: frame numbers out of range.");
 
     for (int i = range_start; i <= range_end; i++) {
-        if ((i == 0 && (pattern[i % 5] == 'p' || pattern[i % 5] == 'b')) ||
-            (i == getNumFrames(PostSource) - 1 && (pattern[i % 5] == 'n' || pattern[i % 5] == 'u')))
-            // Skip the first and last frame if their new matches are incompatible.
+        // Skip the first and last frame if their new matches are incompatible.
+        if ((i == 0 && (pattern[i % 5] == 'p' || pattern[i % 5] == 'b')) || (i == getNumFrames(PostSource) - 1 && (pattern[i % 5] == 'n' || pattern[i % 5] == 'u')))
             continue;
 
-        setMatch(i, pattern[i % 5]);
+        if (i == range_end && pattern[i % 5] == 'n')
+            setMatch(i, 'b');
+        else
+            setMatch(i, pattern[i % 5]);
     }
 
     setModified(true);
