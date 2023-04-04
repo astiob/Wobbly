@@ -2128,7 +2128,7 @@ void WobblyWindow::createPatternGuessingWindow() {
     pg_use_patterns_buttons->setExclusive(false);
     for (auto it = use_patterns.cbegin(); it != use_patterns.cend(); it++) {
         pg_use_patterns_buttons->addButton(new QCheckBox(it->second), it->first);
-        pg_use_patterns_buttons->button(it->first)->setChecked(true);
+        pg_use_patterns_buttons->button(it->first)->setChecked(it->first == PatternCCCNN);
     }
 
     QPushButton *pg_process_section_button = new QPushButton(QStringLiteral("Process current section"));
