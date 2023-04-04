@@ -161,6 +161,9 @@ private:
     DockWidget *combed_dock;
     TableView *combed_view;
 
+    DockWidget *orphan_dock;
+    TableView *orphan_view;
+
     DockWidget *bookmarks_dock;
     TableView *bookmarks_view;
 
@@ -253,6 +256,7 @@ private:
     void createCMatchSequencesWindow();
     void createFadesWindow();
     void createCombedFramesWindow();
+    void createOrphanFramesWindow();
     void createBookmarksWindow();
     void createSettingsWindow();
     void createPluginWindow();
@@ -283,6 +287,7 @@ private:
     void initialiseCMatchSequencesWindow();
     void updateFadesWindow();
     void initialiseCombedFramesWindow();
+    void initialiseOrphanFramesWindow();
     void initialiseBookmarksWindow();
     void initialiseUIFromProject();
 
@@ -409,6 +414,7 @@ public slots:
     void showHideCMatchSequencesWindow();
     void showHideFadesWindow();
     void showHideCombedFramesWindow();
+    void showHideOrphanFramesWindow();
     void showHideBookmarksWindow();
 
     void showHideFrameDetailsOnVideo();
@@ -423,6 +429,9 @@ public slots:
     void setMatchPattern();
     void setDecimationPattern();
     void setMatchAndDecimationPatterns();
+
+    void updateSectionOrphanFrames(int current_frame);
+    void updateSectionOrphanFrames(const Section *section);
 
     void guessCurrentSectionPatternsFromMics();
     void guessProjectPatternsFromMics();

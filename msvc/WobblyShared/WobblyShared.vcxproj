@@ -106,6 +106,7 @@
     <ClCompile Include="..\..\src\shared\ListWidget.cpp" />
     <ClCompile Include="..\..\src\shared\PresetsModel.cpp" />
     <ClCompile Include="..\..\src\shared\ProgressDialog.cpp" />
+    <ClCompile Include="..\..\src\shared\OrphanFramesModel.cpp" />
     <ClCompile Include="..\..\src\shared\ScrollArea.cpp" />
     <ClCompile Include="..\..\src\shared\SectionsModel.cpp" />
     <ClCompile Include="..\..\src\shared\WobblyProject.cpp" />
@@ -137,6 +138,9 @@
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="..\..\src\shared\ProgressDialog.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="..\..\src\shared\OrphanFramesModel.h" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\shared\RandomStuff.h" />

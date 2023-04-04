@@ -409,6 +409,7 @@ void WobblyWindow::createShortcuts() {
         { "", "",                   "Show or hide C match sequences window", &WobblyWindow::showHideCMatchSequencesWindow },
         { "", "",                   "Show or hide interlaced fades window", &WobblyWindow::showHideFadesWindow },
         { "", "",                   "Show or hide combed frames window", &WobblyWindow::showHideCombedFramesWindow },
+        { "", "",                   "Show or hide orhpan frames window", &WobblyWindow::showHideOrphanFramesWindow },
         { "", "",                   "Show or hide bookmarks window", &WobblyWindow::showHideBookmarksWindow },
 
         { "", "",                   "Show or hide frame details printed on the video", &WobblyWindow::showHideFrameDetailsOnVideo },
@@ -2548,6 +2549,33 @@ void WobblyWindow::createCombedFramesWindow() {
 }
 
 
+void WobblyWindow::createOrphanFramesWindow() {
+    orphan_view = new TableView;
+
+    connect(orphan_view, &TableView::doubleClicked, [this] (const QModelIndex &index) {
+        bool ok;
+        int frame = orphan_view->model()->data(index).toInt(&ok);
+        if (ok)
+            requestFrames(frame);
+    });
+
+    QVBoxLayout *vbox = new QVBoxLayout;
+    vbox->addWidget(orphan_view);
+
+    QWidget *orphan_widget = new QWidget;
+    orphan_widget->setLayout(vbox);
+
+    orphan_dock = new DockWidget("Orphan frames", this);
+    orphan_dock->setObjectName("orphan frames window");
+    orphan_dock->setVisible(false);
+    orphan_dock->setFloating(true);
+    orphan_dock->setWidget(orphan_widget);
+    addDockWidget(Qt::RightDockWidgetArea, orphan_dock);
+    tools_menu->addAction(orphan_dock->toggleViewAction());
+    connect(orphan_dock, &DockWidget::visibilityChanged, orphan_dock, &DockWidget::setEnabled);
+}
+
+
 void WobblyWindow::createBookmarksWindow() {
     bookmarks_view = new TableView;
     bookmarks_view->setEditTriggers(QAbstractItemView::DoubleClicked);
@@ -3053,6 +3081,7 @@ void WobblyWindow::createUI() {
     createCMatchSequencesWindow();
     createFadesWindow();
     createCombedFramesWindow();
+    createOrphanFramesWindow();
     createBookmarksWindow();
     createSettingsWindow();
 
@@ -3538,6 +3567,13 @@ void WobblyWindow::initialiseCombedFramesWindow() {
 }
 
 
+void WobblyWindow::initialiseOrphanFramesWindow() {
+    orphan_view->setModel(project->getOrphanFramesModel());
+
+    orphan_view->resizeColumnsToContents();
+}
+
+
 void WobblyWindow::initialiseBookmarksWindow() {
     bookmarks_view->setModel(project->getBookmarksModel());
 
@@ -3576,6 +3612,7 @@ void WobblyWindow::initialiseUIFromProject() {
     initialiseCMatchSequencesWindow();
     updateFadesWindow();
     initialiseCombedFramesWindow();
+    initialiseOrphanFramesWindow();
     initialiseBookmarksWindow();
 }
 
@@ -4177,6 +4214,11 @@ void WobblyWindow::showHideFadesWindow() {
 
 void WobblyWindow::showHideCombedFramesWindow() {
     combed_dock->setVisible(!combed_dock->isVisible());
+}
+
+
+void WobblyWindow::showHideOrphanFramesWindow() {
+    orphan_dock->setVisible(!orphan_dock->isVisible());
 }
 
 
@@ -4808,6 +4850,8 @@ void WobblyWindow::cycleMatchBCN() {
 
     project->cycleMatchBCN(current_frame);
 
+    updateSectionOrphanFrames(current_frame);
+
     updateCMatchSequencesWindow();
 
     try {
@@ -5112,6 +5156,8 @@ void WobblyWindow::resetMatch() {
 
     project->resetRangeMatches(start, end);
 
+    updateSectionOrphanFrames(current_frame);
+
     updateCMatchSequencesWindow();
 
     try {
@@ -5129,6 +5175,8 @@ void WobblyWindow::resetSection() {
     const Section *section = project->findSection(current_frame);
 
     project->resetSectionMatches(section->start);
+
+    updateSectionOrphanFrames(section);
 
     updateCMatchSequencesWindow();
 
@@ -5159,6 +5207,8 @@ void WobblyWindow::rotateAndSetPatterns() {
     project->setSectionMatchesFromPattern(section->start, match_pattern.toStdString());
     project->setSectionDecimationFromPattern(section->start, decimation_pattern.toStdString());
 
+    updateSectionOrphanFrames(section);
+
     updateFrameRatesViewer();
 
     updateCMatchSequencesWindow();
@@ -5183,6 +5233,8 @@ void WobblyWindow::setMatchPattern() {
     project->setRangeMatchesFromPattern(range_start, range_end, match_pattern.toStdString());
 
     cancelRange();
+
+    updateSectionOrphanFrames(current_frame);
 
     updateCMatchSequencesWindow();
 
@@ -5233,6 +5285,8 @@ void WobblyWindow::setMatchAndDecimationPatterns() {
 
     updateFrameRatesViewer();
 
+    updateSectionOrphanFrames(current_frame);
+
     updateCMatchSequencesWindow();
 
     try {
@@ -5240,6 +5294,24 @@ void WobblyWindow::setMatchAndDecimationPatterns() {
     } catch (WobblyException &e) {
         errorPopup(e.what());
     }
+}
+
+
+void WobblyWindow::updateSectionOrphanFrames(int current_frame) {
+    if (!project)
+        return;
+
+    const Section *section = project->findSection(current_frame);
+
+    updateSectionOrphanFrames(section);
+}
+
+
+void WobblyWindow::updateSectionOrphanFrames(const Section *section) {
+    if (!project)
+        return;
+
+    project->updateSectionOrphanFrames(section->start, project->getSectionEnd(section->start));
 }
 
 
@@ -5275,6 +5347,8 @@ void WobblyWindow::guessCurrentSectionPatternsFromMics() {
 
     if (success) {
         updateFrameRatesViewer();
+
+        updateSectionOrphanFrames(current_frame);
 
         updateCMatchSequencesWindow();
 
@@ -5319,6 +5393,8 @@ void WobblyWindow::guessCurrentSectionPatternsFromDMetrics() {
     if (success) {
         updateFrameRatesViewer();
 
+        updateSectionOrphanFrames(current_frame);
+
         updateCMatchSequencesWindow();
 
         try {
@@ -5342,6 +5418,8 @@ void WobblyWindow::guessProjectPatternsFromMics() {
             use_patterns |= pg_use_patterns_buttons->id(buttons[i]);
 
     try {
+        project->clearOrphanFrames();
+
         project->guessProjectPatternsFromMics(pg_length_spin->value(), pg_edge_cutoff->value(), use_patterns, pg_decimate_buttons->checkedId());
 
         QApplication::restoreOverrideCursor();
@@ -5374,6 +5452,8 @@ void WobblyWindow::guessProjectPatternsFromDMetrics() {
             use_patterns |= pg_use_patterns_buttons->id(buttons[i]);
 
     try {
+        project->clearOrphanFrames();
+
         project->guessProjectPatternsFromDMetrics(pg_length_spin->value(), pg_edge_cutoff->value(), use_patterns, pg_decimate_buttons->checkedId());
 
         QApplication::restoreOverrideCursor();
@@ -5425,6 +5505,8 @@ void WobblyWindow::guessProjectPatternsFromMatches() {
         return;
 
     QApplication::setOverrideCursor(Qt::WaitCursor);
+
+    project->clearOrphanFrames();
 
     project->guessProjectPatternsFromMatches(pg_length_spin->value(), pg_edge_cutoff->value(), pg_n_match_buttons->checkedId(), pg_decimate_buttons->checkedId());
 

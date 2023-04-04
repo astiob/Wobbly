@@ -108,6 +108,7 @@ namespace Keys {
     const char matches[] = "matches";;
     const char original_matches[] = "original" " " "matches";;
     const char combed_frames[] = "combed" " " "frames";;
+    const char orphan_frames[] = "orphan" " " "frames";;
     const char decimated_frames[] = "decimated" " " "frames";;
     const char decimate_metrics[] = "decimate" " " "metrics";;
     const char sections[] = "sections";;
@@ -160,6 +161,7 @@ WobblyProject::WobblyProject(bool _is_wobbly)
     : is_wobbly(_is_wobbly)
     , pattern_guessing{ PatternGuessingFromMics, 10, 1, UseThirdNMatchNever, DropFirstDuplicate, PatternCCCNN | PatternCCNNN | PatternCCCCC, FailedPatternGuessingMap() }
     , combed_frames(new CombedFramesModel(this))
+    , orphan_frames(new OrphanFramesModel(this))
     , frozen_frames(new FrozenFramesModel(this))
     , presets(new PresetsModel(this))
     , custom_lists(new CustomListsModel(this))
@@ -431,6 +433,15 @@ void WobblyProject::writeProject(const std::string &path, bool compact_project) 
             json_combed_frames.PushBack(*it, a);
 
         json_project.AddMember(Keys::combed_frames, json_combed_frames, a);
+    }
+
+    if (orphan_frames->cbegin() != orphan_frames->cend()) {
+        rj::Value json_orphan_frames(rj::kArrayType);
+
+        for (auto it = orphan_frames->cbegin(); it != orphan_frames->cend(); it++)
+            json_orphan_frames.PushBack(it->first, a);
+
+        json_project.AddMember(Keys::orphan_frames, json_orphan_frames, a);
     }
 
     if (decimated_frames.size()) {
@@ -1087,6 +1098,20 @@ void WobblyProject::readProject(const std::string &path) {
             if (!json_combed_frames[i].IsInt())
                 throw WobblyException(path + ": element number " + std::to_string(i) + " of JSON key '" + Keys::combed_frames + "' must be an integer.");
             addCombedFrame(json_combed_frames[i].GetInt());
+        }
+    }
+
+    it = json_project.FindMember(Keys::orphan_frames);
+    if (it != json_project.MemberEnd()) {
+        const rj::Value &json_orphan_frames = it->value;
+
+        if (!json_orphan_frames.IsArray() || json_orphan_frames.Size() > (rj::SizeType)getNumFrames(PostSource))
+            throw WobblyException(path + ": JSON key '" + Keys::orphan_frames + "' must be an array with at most " + std::to_string(getNumFrames(PostSource)) + " elements.");
+
+        for (rj::SizeType i = 0; i < json_orphan_frames.Size(); i++) {
+            if (!json_orphan_frames[i].IsInt())
+                throw WobblyException(path + ": element number " + std::to_string(i) + " of JSON key '" + Keys::orphan_frames + "' must be an integer.");
+            addOrphanFrame({json_orphan_frames[i].GetInt(), getMatch(json_orphan_frames[i].GetInt()) });
         }
     }
 
@@ -2494,6 +2519,19 @@ std::map<size_t, size_t> WobblyProject::getCMatchSequences(int minimum) const {
 }
 
 
+void WobblyProject::updateSectionOrphanFrames(int section_start, int section_end) {
+    if (getMatch(section_start) == 'n')
+        addOrphanFrame({ section_start, 'n' });
+    else
+        deleteOrphanFrame(section_start);
+
+    if (getMatch(section_end - 1) == 'b')
+        addOrphanFrame({ section_end - 1, 'b' });
+    else
+        deleteOrphanFrame(section_end - 1);
+}
+
+
 CombedFramesModel *WobblyProject::getCombedFramesModel() {
     return combed_frames;
 }
@@ -2529,6 +2567,44 @@ bool WobblyProject::isCombedFrame(int frame) const {
 
 void WobblyProject::clearCombedFrames() {
     combed_frames->clear();
+}
+
+
+OrphanFramesModel *WobblyProject::getOrphanFramesModel() {
+    return orphan_frames;
+}
+
+
+void WobblyProject::addOrphanFrame(const std::pair<int, char> &orphan) {
+    if (orphan.first < 0 || orphan.first >= getNumFrames(PostSource))
+        throw WobblyException("Can't mark frame " + std::to_string(orphan.first) + " as orphan: value out of range.");
+
+    orphan_frames->insert(orphan);
+
+    setModified(true);
+}
+
+
+void WobblyProject::deleteOrphanFrame(int frame) {
+    if (frame < 0 || frame >= getNumFrames(PostSource))
+        throw WobblyException("Can't mark frame " + std::to_string(frame) + " as not orphan: value out of range.");
+
+    orphan_frames->erase(frame);
+
+    setModified(true);
+}
+
+
+bool WobblyProject::isOrphanFrame(int frame) const {
+    if (frame < 0 || frame >= getNumFrames(PostSource))
+        throw WobblyException("Can't check if frame " + std::to_string(frame) + " is orphan: value out of range.");
+
+    return (bool)orphan_frames->count(frame);
+}
+
+
+void WobblyProject::clearOrphanFrames() {
+    orphan_frames->clear();
 }
 
 
@@ -3002,6 +3078,8 @@ bool WobblyProject::guessSectionPatternsFromMics(int section_start, int minimum_
     for (int i = section_start; i < section_end; i++)
         setMatch(i, patterns[best_pattern].pattern[(i + patterns[best_pattern].pattern_offset) % patterns[best_pattern].pattern.size()]);
 
+    updateSectionOrphanFrames(section_start, section_end);
+
     if (section_end == getNumFrames(PostSource) && getMatch(section_end - 1) == 'n')
         setMatch(section_end - 1, 'b');
 
@@ -3125,6 +3203,8 @@ bool WobblyProject::guessSectionPatternsFromDMetrics(int section_start, int mini
 
     for (int i = section_start; i < section_end; i++)
         setMatch(i, patterns[best_pattern].pattern[(i + patterns[best_pattern].pattern_offset) % patterns[best_pattern].pattern.size()]);
+
+    updateSectionOrphanFrames(section_start, section_end);
 
     if (section_end == getNumFrames(PostSource) && getMatch(section_end - 1) == 'n')
         setMatch(section_end - 1, 'b');

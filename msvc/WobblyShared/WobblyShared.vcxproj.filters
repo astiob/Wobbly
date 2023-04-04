@@ -50,6 +50,9 @@
     <ClCompile Include="..\..\src\shared\ProgressDialog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\shared\OrphanFramesModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\shared\ScrollArea.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -89,6 +92,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="..\..\src\shared\ProgressDialog.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="..\..\src\shared\OrphanFramesModel.h">
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="..\..\src\shared\ScrollArea.h">

@@ -47,6 +47,7 @@ SOFTWARE.
 #include "CustomListsModel.h"
 #include "FrozenFramesModel.h"
 #include "PresetsModel.h"
+#include "OrphanFramesModel.h"
 #include "SectionsModel.h"
 #include "WobblyException.h"
 #include "WobblyTypes.h"
@@ -121,6 +122,7 @@ class WobblyProject : public QObject {
         InterlacedFadeMap interlaced_fades; // Key is InterlacedFade::frame
 
         CombedFramesModel *combed_frames;
+        OrphanFramesModel *orphan_frames;
         FrozenFramesModel *frozen_frames;
         PresetsModel *presets;
         CustomListsModel *custom_lists;
@@ -258,6 +260,7 @@ class WobblyProject : public QObject {
 
         std::map<size_t, size_t> getCMatchSequences(int minimum) const;
 
+        void updateSectionOrphanFrames(int section_start, int section_end);
 
         CombedFramesModel *getCombedFramesModel();
         void addCombedFrame(int frame);
@@ -265,6 +268,11 @@ class WobblyProject : public QObject {
         bool isCombedFrame(int frame) const;
         void clearCombedFrames();
 
+        OrphanFramesModel *getOrphanFramesModel();
+        void addOrphanFrame(const std::pair<int, char> &orphan);
+        void deleteOrphanFrame(int frame);
+        bool isOrphanFrame(int frame) const;
+        void clearOrphanFrames();
 
         const Resize &getResize() const;
         void setResize(int new_width, int new_height, const std::string &filter);
