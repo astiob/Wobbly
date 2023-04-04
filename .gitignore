@@ -33,3 +33,6 @@ releases/
 wibbly
 wobbly
 .vscode
+wibbly.exe
+wobbly.exe
+wobbly.ini*
