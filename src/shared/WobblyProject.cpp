@@ -3131,8 +3131,8 @@ bool WobblyProject::guessSectionPatternsFromDMetrics(int section_start, int mini
 
     // use p match if the range end is too bad at the end of the section
     char match_index = matchCharToIndexDMetrics(getMatch(section_end - 1));
-    int16_t mmet_cn = getMMetrics(section_end - 1)[match_index];
-    int16_t mmet_n = getMMetrics(section_end - 1)[matchCharToIndexDMetrics('n')];
+    int32_t mmet_cn = getMMetrics(section_end - 1)[match_index];
+    int32_t mmet_n = getMMetrics(section_end - 1)[matchCharToIndexDMetrics('n')];
     if (mmet_cn > mmet_n * 1.5)
         setMatch(section_end - 1, 'n');
 
