@@ -3079,8 +3079,6 @@ bool WobblyProject::guessSectionPatternsFromMics(int section_start, int minimum_
     for (int i = section_start; i < section_end; i++)
         setMatch(i, patterns[best_pattern].pattern[(i + patterns[best_pattern].pattern_offset) % patterns[best_pattern].pattern.size()]);
 
-    updateSectionOrphanFrames(section_start, section_end);
-
     if (section_end == getNumFrames(PostSource) && getMatch(section_end - 1) == 'n')
         setMatch(section_end - 1, 'b');
 
@@ -3205,8 +3203,6 @@ bool WobblyProject::guessSectionPatternsFromDMetrics(int section_start, int mini
     for (int i = section_start; i < section_end; i++)
         setMatch(i, patterns[best_pattern].pattern[(i + patterns[best_pattern].pattern_offset) % patterns[best_pattern].pattern.size()]);
 
-    updateSectionOrphanFrames(section_start, section_end);
-
     if (section_end == getNumFrames(PostSource) && getMatch(section_end - 1) == 'n')
         setMatch(section_end - 1, 'b');
 
@@ -3242,6 +3238,9 @@ void WobblyProject::guessProjectPatternsFromMics(int minimum_length, int edge_cu
     for (auto it = sections->cbegin(); it != sections->cend(); it++)
         guessSectionPatternsFromMics(it->second.start, minimum_length, edge_cutoff, use_patterns, drop_duplicate);
 
+    for (auto it = sections->cbegin(); it != sections->cend(); it++)
+        updateSectionOrphanFrames(it->second.start, getSectionEnd(it->second.start));
+
     pattern_guessing.method = PatternGuessingFromMics;
     pattern_guessing.minimum_length = minimum_length;
     pattern_guessing.edge_cutoff = edge_cutoff;
@@ -3257,6 +3256,9 @@ void WobblyProject::guessProjectPatternsFromDMetrics(int minimum_length, int edg
 
     for (auto it = sections->cbegin(); it != sections->cend(); it++)
         guessSectionPatternsFromDMetrics(it->second.start, minimum_length, edge_cutoff, use_patterns, drop_duplicate);
+
+    for (auto it = sections->cbegin(); it != sections->cend(); it++)
+        updateSectionOrphanFrames(it->second.start, getSectionEnd(it->second.start));
 
     pattern_guessing.method = PatternGuessingFromDMetrics;
     pattern_guessing.minimum_length = minimum_length;
@@ -3390,6 +3392,9 @@ void WobblyProject::guessProjectPatternsFromMatches(int minimum_length, int edge
 
     for (auto it = sections->cbegin(); it != sections->cend(); it++)
         guessSectionPatternsFromMatches(it->second.start, minimum_length, edge_cutoff, use_third_n_match, drop_duplicate);
+
+    for (auto it = sections->cbegin(); it != sections->cend(); it++)
+        updateSectionOrphanFrames(it->second.start, getSectionEnd(it->second.start));
 
     pattern_guessing.method = PatternGuessingFromMatches;
     pattern_guessing.minimum_length = minimum_length;
