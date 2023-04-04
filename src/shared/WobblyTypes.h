@@ -169,7 +169,8 @@ enum PatternGuessingFailureReason {
 
 enum PatternGuessingMethods {
     PatternGuessingFromMatches = 0,
-    PatternGuessingFromMics
+    PatternGuessingFromMics,
+    PatternGuessingFromDMetrics,
 };
 
 

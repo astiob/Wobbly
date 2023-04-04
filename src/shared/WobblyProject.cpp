@@ -764,7 +764,8 @@ void WobblyProject::readProject(const std::string &path) {
 
                 std::unordered_map<std::string, int> guessing_methods = {
                     { "from matches", PatternGuessingFromMatches },
-                    { "from mics", PatternGuessingFromMics }
+                    { "from mics", PatternGuessingFromMics },
+                    { "from dmetrics", PatternGuessingFromDMetrics },
                 };
 
                 try {
@@ -1686,7 +1687,7 @@ void WobblyProject::setMics(int frame, int16_t mic_p, int16_t mic_c, int16_t mic
 
 void WobblyProject::setDMetrics(int frame, int32_t mmetric_p, int32_t mmetric_c, int32_t vmetric_p, int32_t vmetric_c) {
     if (frame < 0 || frame >= getNumFrames(PostSource))
-        throw WobblyException("Can't set the mics for frame " + std::to_string(frame) + ": frame number out of range.");
+        throw WobblyException("Can't set the dmetrics for frame " + std::to_string(frame) + ": frame number out of range.");
 
     if (!mmetrics.size())
         mmetrics.resize(getNumFrames(PostSource), { 0 });
@@ -3027,6 +3028,129 @@ bool WobblyProject::guessSectionPatternsFromMics(int section_start, int minimum_
     return true;
 }
 
+bool WobblyProject::guessSectionPatternsFromDMetrics(int section_start, int minimum_length, int use_patterns, int drop_duplicate) {
+    if (!mics.size())
+        throw WobblyException("Can't guess patterns from dmetrics because there are no dmetrics in the project.");
+
+    if (section_start < 0 || section_start >= getNumFrames(PostSource))
+        throw WobblyException("Can't guess patterns from dmetrics for section starting at " + std::to_string(section_start) + ": frame number out of range.");
+
+    if (!sections->count(section_start))
+        throw WobblyException("Can't guess patterns from dmetrics for section starting at " + std::to_string(section_start) + ": no such section.");
+
+
+    int section_end = getSectionEnd(section_start);
+
+    if (section_end - section_start < minimum_length) {
+        FailedPatternGuessing failure;
+        failure.start = section_start;
+        failure.reason = SectionTooShort;
+        pattern_guessing.failures.erase(failure.start);
+        pattern_guessing.failures.insert({ failure.start, failure });
+
+        setModified(true);
+
+        return false;
+    }
+
+    struct Pattern {
+        const std::string pattern;
+        int pattern_offset;
+        int32_t mmet_dev;
+        int32_t vmet_dev;
+    };
+
+    std::vector<Pattern> patterns = {
+        { "cccnn", -1, INT_MAX, INT_MAX },
+        { "ccnnn", -1, INT_MAX, INT_MAX },
+        { "c",     -1, INT_MAX, INT_MAX }
+    };
+
+    int best_mmet_dev = INT_MAX;
+    int best_pattern = -1;
+
+    for (size_t p = 0; p < patterns.size(); p++) {
+        if (patterns[p].pattern == "cccnn" && !(use_patterns & PatternCCCNN))
+            continue;
+        if (patterns[p].pattern == "ccnnn" && !(use_patterns & PatternCCNNN))
+            continue;
+        if (patterns[p].pattern == "c" && !(use_patterns & PatternCCCCC))
+            continue;
+
+        for (int pattern_offset = 0; pattern_offset < (int)patterns[p].pattern.size(); pattern_offset++) {
+            int32_t mmet_dev = 0;
+            int32_t vmet_dev = 0;
+
+            for (int frame = section_start + 1; frame < section_end - 1; frame++) {
+                char pattern_match = patterns[p].pattern[(frame + pattern_offset) % patterns[p].pattern.size()];
+                char other_match = pattern_match == 'c' ? 'n' : 'c';
+
+                auto frame_mmetric = getMMetrics(frame);
+                auto frame_vmetric = getVMetrics(frame);
+
+                int32_t mmet_pattern_match = frame_mmetric[matchCharToIndexDMetrics(pattern_match)];
+                int32_t mmet_other_match = frame_mmetric[matchCharToIndexDMetrics(other_match)];
+                int32_t vmet_pattern_match = frame_vmetric[matchCharToIndexDMetrics(pattern_match)];
+                int32_t vmet_other_match = frame_vmetric[matchCharToIndexDMetrics(other_match)];
+
+                mmet_dev += std::max(0, mmet_pattern_match - mmet_other_match);
+                vmet_dev += std::max(0, vmet_pattern_match - vmet_other_match);
+            }
+
+            if (mmet_dev < patterns[p].mmet_dev) {
+                patterns[p].pattern_offset = pattern_offset;
+                patterns[p].mmet_dev = mmet_dev;
+                patterns[p].vmet_dev = vmet_dev;
+            }
+        }
+
+        if (patterns[p].mmet_dev < best_mmet_dev) {
+            best_mmet_dev = patterns[p].mmet_dev;
+            best_pattern = p;
+        }
+    }
+
+
+    if (section_end - section_start < patterns[best_pattern].vmet_dev) {
+        FailedPatternGuessing failure;
+        failure.start = section_start;
+        failure.reason = AmbiguousMatchPattern;
+        pattern_guessing.failures.erase(failure.start);
+        pattern_guessing.failures.insert({ failure.start, failure });
+
+        setModified(true);
+
+        return false;
+    }
+
+    for (int i = section_start; i < section_end; i++)
+        setMatch(i, patterns[best_pattern].pattern[(i + patterns[best_pattern].pattern_offset) % patterns[best_pattern].pattern.size()]);
+
+    if (section_end == getNumFrames(PostSource) && getMatch(section_end - 1) == 'n')
+        setMatch(section_end - 1, 'b');
+
+    // use p match if the range end is too bad at the end of the section
+    char match_index = matchCharToIndexDMetrics(getMatch(section_end - 1));
+    int16_t mmet_cn = getMMetrics(section_end - 1)[match_index];
+    int16_t mmet_n = getMMetrics(section_end - 1)[matchCharToIndexDMetrics('n')];
+    if (mmet_cn > mmet_n * 1.5)
+        setMatch(section_end - 1, 'n');
+
+    if (patterns[best_pattern].pattern == "c") {
+        for (int i = section_start; i < section_end; i++)
+            deleteDecimatedFrame(i);
+    } else {
+        int first_duplicate = 4 - patterns[best_pattern].pattern_offset;
+
+        applyPatternGuessingDecimation(section_start, section_end, first_duplicate, drop_duplicate);
+    }
+
+    pattern_guessing.failures.erase(section_start);
+
+    setModified(true);
+
+    return true;
+}
 
 void WobblyProject::guessProjectPatternsFromMics(int minimum_length, int use_patterns, int drop_duplicate) {
     pattern_guessing.failures.clear();
@@ -3042,6 +3166,20 @@ void WobblyProject::guessProjectPatternsFromMics(int minimum_length, int use_pat
     setModified(true);
 }
 
+
+void WobblyProject::guessProjectPatternsFromDMetrics(int minimum_length, int use_patterns, int drop_duplicate) {
+    pattern_guessing.failures.clear();
+
+    for (auto it = sections->cbegin(); it != sections->cend(); it++)
+        guessSectionPatternsFromDMetrics(it->second.start, minimum_length, use_patterns, drop_duplicate);
+
+    pattern_guessing.method = PatternGuessingFromDMetrics;
+    pattern_guessing.minimum_length = minimum_length;
+    pattern_guessing.use_patterns = use_patterns;
+    pattern_guessing.decimation = drop_duplicate;
+
+    setModified(true);
+}
 
 bool WobblyProject::guessSectionPatternsFromMatches(int section_start, int minimum_length, int use_third_n_match, int drop_duplicate) {
     if (section_start < 0 || section_start >= getNumFrames(PostSource))

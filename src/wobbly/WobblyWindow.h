@@ -425,6 +425,8 @@ public slots:
 
     void guessCurrentSectionPatternsFromMics();
     void guessProjectPatternsFromMics();
+    void guessCurrentSectionPatternsFromDMetrics();
+    void guessProjectPatternsFromDMetrics();
     void guessCurrentSectionPatternsFromMatches();
     void guessProjectPatternsFromMatches();
 
