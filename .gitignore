@@ -38,3 +38,5 @@ wobbly.exe
 wobbly.ini*
 configure~
 wibbly.ini
+confdefs.h
+conftest.dir/
