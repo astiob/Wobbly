@@ -275,7 +275,8 @@ void WobblyProject::writeProject(const std::string &path, bool compact_project) 
 
             const char *guessing_methods[] = {
                 "from matches",
-                "from mics"
+                "from mics",
+                "from dmetrics"
             };
             json_pattern_guessing.AddMember(Keys::UserInterface::PatternGuessing::method, rj::Value(guessing_methods[pattern_guessing.method], a), a);
 

@@ -3456,7 +3456,7 @@ void WobblyWindow::initialisePatternGuessingWindow() {
         pg_methods_buttons->button(pg.method)->setChecked(true);
 
         pg_length_spin->setValue(pg.minimum_length);
-        pg_edge_cutoff->setValue(pg.minimum_length);
+        pg_edge_cutoff->setValue(pg.edge_cutoff);
 
         pg_n_match_buttons->button(pg.third_n_match)->setChecked(true);
 
