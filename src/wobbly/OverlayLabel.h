@@ -32,11 +32,13 @@ public:
 
 public slots:
     void setFramePixmapSize(QSize new_size);
+    void setOverlayScaling(int new_scale);
 
 private:
     void paintEvent(QPaintEvent *e);
 
     QSize m_frame_pixmap_size;
+    int m_overlay_scale;
 };
 
 #endif // OVERLAYLABEL_H

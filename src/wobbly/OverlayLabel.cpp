@@ -31,10 +31,16 @@ void OverlayLabel::setFramePixmapSize(QSize new_size) {
     update();
 }
 
+void OverlayLabel::setOverlayScaling(int new_scale) {
+    m_overlay_scale = new_scale;
+
+    update();
+}
+
 
 void OverlayLabel::paintEvent(QPaintEvent *) {
     QTextDocument doc;
-    doc.setHtml("<font color=black>" + text() + "</font>");
+    doc.setHtml(("<font color=black size=" + std::to_string(m_overlay_scale) + ">").c_str() + text() + "</font>");
 
 
     QPoint top_left(std::max(0, width() - m_frame_pixmap_size.width()) / 2,
@@ -85,7 +91,7 @@ void OverlayLabel::paintEvent(QPaintEvent *) {
     {
         QPainter paint(&img);
         paint.setViewport(QRect(top_left, img.size()));
-        doc.setHtml("<font color=white>" + text() + "</font>");
+        doc.setHtml(("<font color=white size=" + std::to_string(m_overlay_scale) + ">").c_str() + text() + "</font>");
         doc.drawContents(&paint);
     }
 

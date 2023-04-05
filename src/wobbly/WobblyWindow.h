@@ -169,6 +169,7 @@ private:
 
     DockWidget *settings_dock;
     QSpinBox *settings_font_spin;
+    QSpinBox *overlay_size_spin;
     QCheckBox *settings_compact_projects_check;
     QCheckBox *settings_use_relative_paths_check;
     QComboBox *settings_colormatrix_combo;

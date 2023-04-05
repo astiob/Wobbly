@@ -57,6 +57,7 @@ SOFTWARE.
 #define KEY_STATE                           QStringLiteral("user_interface/state")
 #define KEY_GEOMETRY                        QStringLiteral("user_interface/geometry")
 #define KEY_FONT_SIZE                       QStringLiteral("user_interface/font_size")
+#define KEY_OVERLAY_SIZE                    QStringLiteral("user_interface/overlay_size")
 #define KEY_ASK_FOR_BOOKMARK_DESCRIPTION    QStringLiteral("user_interface/ask_for_bookmark_description")
 #define KEY_COLORMATRIX                     QStringLiteral("user_interface/colormatrix")
 #define KEY_MAXIMUM_CACHE_SIZE              QStringLiteral("user_interface/maximum_cache_size")
@@ -159,6 +160,8 @@ void WobblyWindow::readSettings() {
         restoreGeometry(settings.value(KEY_GEOMETRY).toByteArray());
 
     settings_font_spin->setValue(settings.value(KEY_FONT_SIZE, QApplication::font().pointSize()).toInt());
+
+    overlay_size_spin->setValue(settings.value(KEY_OVERLAY_SIZE, 4).toInt());
 
     settings_compact_projects_check->setChecked(settings.value(KEY_COMPACT_PROJECT_FILES, false).toBool());
 
@@ -2657,6 +2660,9 @@ void WobblyWindow::createSettingsWindow() {
     settings_font_spin = new QSpinBox;
     settings_font_spin->setRange(4, 99);
 
+    overlay_size_spin = new QSpinBox;
+    overlay_size_spin->setRange(1, 10);
+
     settings_colormatrix_combo = new QComboBox;
     settings_colormatrix_combo->addItems({
                                              "BT 601",
@@ -2714,6 +2720,12 @@ void WobblyWindow::createSettingsWindow() {
         QApplication::setFont(font);
 
         settings.setValue(KEY_FONT_SIZE, value);
+    });
+
+    connect(overlay_size_spin, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), [this] (int value) {
+        overlay_label->setOverlayScaling(value);
+
+        settings.setValue(KEY_OVERLAY_SIZE, value);
     });
 
     connect(settings_colormatrix_combo, &QComboBox::currentTextChanged, [this] (const QString &text) {
@@ -2845,6 +2857,7 @@ void WobblyWindow::createSettingsWindow() {
     form->addRow(settings_print_details_check);
     form->addRow(settings_bookmark_description_check);
     form->addRow(QStringLiteral("Font size"), settings_font_spin);
+    form->addRow(QStringLiteral("Overlay size"), overlay_size_spin);
     form->addRow(QStringLiteral("Colormatrix"), settings_colormatrix_combo);
     form->addRow(QStringLiteral("Maximum cache size"), settings_cache_spin);
     form->addRow(QStringLiteral("Number of thumbnails"), settings_num_thumbnails_spin);
