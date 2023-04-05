@@ -339,6 +339,8 @@ void WibblyJob::framePropsToScript(std::string &script) const {
     }
     if (steps & StepInterlacedFades)
         props += "'WibblyFieldDifference', ";
+    if (steps & StepDecimation)
+        props += "'VDecimateDrop', 'VDecimateTotalDiff', 'VDecimateMaxBlockDiff', ";
 
     script += props;
     script += "])\n\n";
@@ -421,6 +423,9 @@ std::string WibblyJob::generateDisplayScript() const {
 
     if (steps & StepInterlacedFades)
         interlacedFadesToScript(script);
+
+    if (steps & StepDecimation)
+        decimationToScript(script);
 
     if (steps & StepFieldMatch || steps & StepInterlacedFades)
         framePropsToScript(script);
