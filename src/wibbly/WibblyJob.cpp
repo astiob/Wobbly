@@ -26,7 +26,7 @@ SOFTWARE.
 WibblyJob::WibblyJob()
     : steps(StepTrim | StepCrop | StepFieldMatch | StepInterlacedFades | StepDecimation | StepSceneChanges)
     , crop{ true, false, 0, 0, 0, 0 }
-    , dmetrics{ false, 10 }
+    , dmetrics{ true, 10 }
     , vfm{
             {
                 { "order", 1 },
@@ -43,7 +43,7 @@ WibblyJob::WibblyJob()
             },
             {
                 { "mchroma", true },
-                { "chroma", false }
+                { "chroma", true }
             }
     }
     , vdecimate{

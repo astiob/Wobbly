@@ -770,7 +770,7 @@ void WobblyProject::readProject(const std::string &path) {
 
             const rj::Value &json_pattern_guessing = it->value;
 
-            pattern_guessing.method = PatternGuessingFromMics;
+            pattern_guessing.method = PatternGuessingFromMicsAndDMetrics;
             it = json_pattern_guessing.FindMember(Keys::UserInterface::PatternGuessing::method);
             if (it != json_pattern_guessing.MemberEnd()) {
                 CHECK_STRING;
