@@ -59,6 +59,7 @@ SOFTWARE.
 #define KEY_GEOMETRY                        QStringLiteral("user_interface/geometry")
 #define KEY_FONT_SIZE                       QStringLiteral("user_interface/font_size")
 #define KEY_OVERLAY_SIZE                    QStringLiteral("user_interface/overlay_size")
+#define KEY_APPLICATION_STYLE               QStringLiteral("user_interface/application_style")
 #define KEY_ASK_FOR_BOOKMARK_DESCRIPTION    QStringLiteral("user_interface/ask_for_bookmark_description")
 #define KEY_COLORMATRIX                     QStringLiteral("user_interface/colormatrix")
 #define KEY_MAXIMUM_CACHE_SIZE              QStringLiteral("user_interface/maximum_cache_size")
@@ -164,14 +165,14 @@ void WobblyWindow::readSettings() {
 
     overlay_size_spin->setValue(settings.value(KEY_OVERLAY_SIZE, 4).toInt());
 
+    application_style_combo->setCurrentText(settings.value(KEY_APPLICATION_STYLE, "Dark").toString());
+
     settings_compact_projects_check->setChecked(settings.value(KEY_COMPACT_PROJECT_FILES, false).toBool());
 
     settings_use_relative_paths_check->setChecked(settings.value(KEY_USE_RELATIVE_PATHS, false).toBool());
 
     settings_bookmark_description_check->setChecked(settings.value(KEY_ASK_FOR_BOOKMARK_DESCRIPTION, true).toBool());
 
-    /// Why is it that the default values for some of these settings are kept in this function,
-    /// but for others they are kept in createSettingsWindow ?
     settings_colormatrix_combo->setCurrentText(settings.value(KEY_COLORMATRIX, "BT 601").toString());
 
     settings_cache_spin->setValue(settings.value(KEY_MAXIMUM_CACHE_SIZE, 4096).toInt());
@@ -2729,6 +2730,10 @@ void WobblyWindow::createSettingsWindow() {
     overlay_size_spin = new QSpinBox;
     overlay_size_spin->setRange(1, 10);
 
+    application_style_combo = new QComboBox;
+    application_style_combo->addItems({ "Old", "Light", "Dark" });
+    application_style_combo->setCurrentIndex(0);
+
     settings_colormatrix_combo = new QComboBox;
     settings_colormatrix_combo->addItems({
                                              "BT 601",
@@ -2792,6 +2797,18 @@ void WobblyWindow::createSettingsWindow() {
         overlay_label->setOverlayScaling(value);
 
         settings.setValue(KEY_OVERLAY_SIZE, value);
+    });
+
+    connect(application_style_combo, &QComboBox::currentTextChanged, [this] (const QString &text) {
+        settings.setValue(KEY_APPLICATION_STYLE, text);
+
+        if (text == "Old") {
+            setStyleSheet("");
+        } else {
+            QFile styleSheet(QApplication::applicationDirPath() + "/styles/" + text.toLower().toUtf8().constData() + "/style.qss");
+            if(styleSheet.open(QFile::ReadOnly | QFile::Text))
+                setStyleSheet(styleSheet.readAll());
+        }
     });
 
     connect(settings_colormatrix_combo, &QComboBox::currentTextChanged, [this] (const QString &text) {
@@ -2924,6 +2941,7 @@ void WobblyWindow::createSettingsWindow() {
     form->addRow(settings_bookmark_description_check);
     form->addRow(QStringLiteral("Font size"), settings_font_spin);
     form->addRow(QStringLiteral("Overlay size"), overlay_size_spin);
+    form->addRow(QStringLiteral("Application style"), application_style_combo);
     form->addRow(QStringLiteral("Colormatrix"), settings_colormatrix_combo);
     form->addRow(QStringLiteral("Maximum cache size"), settings_cache_spin);
     form->addRow(QStringLiteral("Number of thumbnails"), settings_num_thumbnails_spin);
