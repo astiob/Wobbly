@@ -460,6 +460,7 @@ void WobblyWindow::createShortcuts() {
         { "", "",                   "Guess every section's patterns from matches", &WobblyWindow::guessProjectPatternsFromMatches },
         { "", "Ctrl+Alt+G",         "Guess current section's patterns from mics", &WobblyWindow::guessCurrentSectionPatternsFromMics },
         { "", "Ctrl+Alt+H",         "Guess current section's patterns from dmetrics", &WobblyWindow::guessCurrentSectionPatternsFromDMetrics },
+        { "", "Ctrl+Alt+J",         "Guess current section's patterns from mics and dmetrics", &WobblyWindow::guessCurrentSectionPatternsFromMicsAndDMetrics },
         { "", "",                   "Guess every section's patterns from mics", &WobblyWindow::guessProjectPatternsFromMics },
         { "", "",                   "Guess every section's patterns from dmetrics", &WobblyWindow::guessProjectPatternsFromDMetrics },
         { "", "E",                  "Start a range", &WobblyWindow::startRange },
@@ -2037,6 +2038,7 @@ void WobblyWindow::createPatternGuessingWindow() {
         { PatternGuessingFromMatches, "From matches" },
         { PatternGuessingFromMics, "From mics" },
         { PatternGuessingFromDMetrics, "From dmetrics" },
+        { PatternGuessingFromMicsAndDMetrics, "From mics+dmetrics" },
     };
     pg_methods_buttons = new QButtonGroup(this);
     for (auto it = guessing_methods.cbegin(); it != guessing_methods.cend(); it++)
@@ -2153,6 +2155,8 @@ void WobblyWindow::createPatternGuessingWindow() {
             guessCurrentSectionPatternsFromMatches();
         else if (pg_methods_buttons->checkedId() == PatternGuessingFromDMetrics)
             guessCurrentSectionPatternsFromDMetrics();
+        else if (pg_methods_buttons->checkedId() == PatternGuessingFromMicsAndDMetrics)
+            guessCurrentSectionPatternsFromMicsAndDMetrics();
         else
             guessCurrentSectionPatternsFromMics();
     });
@@ -2162,6 +2166,8 @@ void WobblyWindow::createPatternGuessingWindow() {
             guessProjectPatternsFromMatches();
         else if (pg_methods_buttons->checkedId() == PatternGuessingFromDMetrics)
             guessProjectPatternsFromDMetrics();
+        else if (pg_methods_buttons->checkedId() == PatternGuessingFromMicsAndDMetrics)
+            guessProjectPatternsFromMicsAndDMetrics();
         else
             guessProjectPatternsFromMics();
     });
@@ -5417,6 +5423,51 @@ void WobblyWindow::guessCurrentSectionPatternsFromDMetrics() {
     }
 }
 
+void WobblyWindow::guessCurrentSectionPatternsFromMicsAndDMetrics() {
+    if (!project)
+        return;
+
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+
+    int section_start = project->findSection(current_frame)->start;
+
+    int use_patterns = 0;
+    auto buttons = pg_use_patterns_buttons->buttons();
+    for (int i = 0; i < buttons.size(); i++)
+        if (buttons[i]->isChecked())
+            use_patterns |= pg_use_patterns_buttons->id(buttons[i]);
+
+    bool success;
+
+    try {
+        success = project->guessSectionPatternsFromMicsAndDMetrics(section_start, pg_length_spin->value(), pg_edge_cutoff->value(), use_patterns, pg_decimate_buttons->checkedId());
+    } catch (WobblyException &e) {
+        QApplication::restoreOverrideCursor();
+
+        errorPopup(e.what());
+
+        return;
+    }
+
+    updatePatternGuessingWindow();
+
+    QApplication::restoreOverrideCursor();
+
+    if (success) {
+        updateFrameRatesViewer();
+
+        updateSectionOrphanFrames(current_frame);
+
+        updateCMatchSequencesWindow();
+
+        try {
+            evaluateScript(preview);
+        } catch (WobblyException &e) {
+            errorPopup(e.what());
+        }
+    }
+}
+
 void WobblyWindow::guessProjectPatternsFromMics() {
     if (!project)
         return;
@@ -5483,6 +5534,41 @@ void WobblyWindow::guessProjectPatternsFromDMetrics() {
         errorPopup(e.what());
     }
 }
+
+
+void WobblyWindow::guessProjectPatternsFromMicsAndDMetrics() {
+    if (!project)
+        return;
+
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+
+    int use_patterns = 0;
+    auto buttons = pg_use_patterns_buttons->buttons();
+    for (int i = 0; i < buttons.size(); i++)
+        if (buttons[i]->isChecked())
+            use_patterns |= pg_use_patterns_buttons->id(buttons[i]);
+
+    try {
+        project->clearOrphanFrames();
+
+        project->guessProjectPatternsFromMicsAndDMetrics(pg_length_spin->value(), pg_edge_cutoff->value(), use_patterns, pg_decimate_buttons->checkedId());
+
+        QApplication::restoreOverrideCursor();
+
+        updatePatternGuessingWindow();
+
+        updateFrameRatesViewer();
+
+        updateCMatchSequencesWindow();
+
+        evaluateScript(preview);
+    } catch (WobblyException &e) {
+        QApplication::restoreOverrideCursor();
+
+        errorPopup(e.what());
+    }
+}
+
 
 void WobblyWindow::guessCurrentSectionPatternsFromMatches() {
     if (!project)

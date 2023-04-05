@@ -276,7 +276,8 @@ void WobblyProject::writeProject(const std::string &path, bool compact_project) 
             const char *guessing_methods[] = {
                 "from matches",
                 "from mics",
-                "from dmetrics"
+                "from dmetrics",
+                "from mics+dmetrics",
             };
             json_pattern_guessing.AddMember(Keys::UserInterface::PatternGuessing::method, rj::Value(guessing_methods[pattern_guessing.method], a), a);
 
@@ -778,6 +779,7 @@ void WobblyProject::readProject(const std::string &path) {
                     { "from matches", PatternGuessingFromMatches },
                     { "from mics", PatternGuessingFromMics },
                     { "from dmetrics", PatternGuessingFromDMetrics },
+                    { "from mics+dmetrics", PatternGuessingFromMicsAndDMetrics },
                 };
 
                 try {
@@ -3221,7 +3223,7 @@ bool WobblyProject::guessSectionPatternsFromDMetrics(int section_start, int mini
     if (section_start == 0 && getMatch(0) == 'b')
         setMatch(0, 'n');
 
-    // use p match if the range end is too bad at the end of the section
+    // use b match if the range end is too bad at the end of the section
     char match_index = matchCharToIndexDMetrics(getMatch(section_end - 1));
     int32_t mmet_cn = getMMetrics(section_end - 1)[match_index];
     int32_t mmet_n = getMMetrics(section_end - 1)[matchCharToIndexDMetrics('b')];
@@ -3243,6 +3245,185 @@ bool WobblyProject::guessSectionPatternsFromDMetrics(int section_start, int mini
 
     return true;
 }
+
+
+bool WobblyProject::guessSectionPatternsFromMicsAndDMetrics(int section_start, int minimum_length, int edge_cutoff, int use_patterns, int drop_duplicate) {
+    if (!mics.size())
+        throw WobblyException("Can't guess mics_patterns from mics+dmetrics because there are no mics in the project.");
+    else if (!mics.size())
+        throw WobblyException("Can't guess mics_patterns from mics+dmetrics because there are no dmetrics in the project.");
+
+    if (section_start < 0 || section_start >= getNumFrames(PostSource))
+        throw WobblyException("Can't guess mics_patterns from mics+dmetrics for section starting at " + std::to_string(section_start) + ": frame number out of range.");
+
+    if (!sections->count(section_start))
+        throw WobblyException("Can't guess mics_patterns from mics+dmetrics for section starting at " + std::to_string(section_start) + ": no such section.");
+
+
+    int section_end = getSectionEnd(section_start);
+
+    if ((section_end - section_start - 2 * edge_cutoff) < minimum_length) {
+        FailedPatternGuessing failure;
+        failure.start = section_start;
+        failure.reason = SectionTooShort;
+        pattern_guessing.failures.erase(failure.start);
+        pattern_guessing.failures.insert({ failure.start, failure });
+
+        setModified(true);
+
+        return false;
+    }
+
+    struct MicsPattern {
+        const std::string pattern;
+        int pattern_offset;
+        int mic_dev; // "dev" ? Name inherited from Yatta.
+    };
+
+    struct DMetPattern {
+        const std::string pattern;
+        int pattern_offset;
+        int32_t mmet_dev;
+        int32_t vmet_dev;
+    };
+
+    std::vector<MicsPattern> mics_patterns = {
+        { "cccnn", -1, INT_MAX },
+        { "ccnnn", -1, INT_MAX },
+        { "c",     -1, INT_MAX }
+    };
+
+    std::vector<DMetPattern> dmet_patterns = {
+        { "cccnn", -1, INT_MAX, INT_MAX },
+        { "ccnnn", -1, INT_MAX, INT_MAX },
+        { "c",     -1, INT_MAX, INT_MAX }
+    };
+
+    int best_mic_dev = INT_MAX;
+    int best_mmet_dev = INT_MAX;
+    int best_mic_pattern = -1;
+    int best_dmet_pattern = -1;
+
+    for (size_t p = 0; p < mics_patterns.size(); p++) {
+        if (mics_patterns[p].pattern == "cccnn" && !(use_patterns & PatternCCCNN))
+            continue;
+        if (mics_patterns[p].pattern == "ccnnn" && !(use_patterns & PatternCCNNN))
+            continue;
+        if (mics_patterns[p].pattern == "c" && !(use_patterns & PatternCCCCC))
+            continue;
+
+        for (int pattern_offset = 0; pattern_offset < (int)mics_patterns[p].pattern.size(); pattern_offset++) {
+            int mic_dev = 0;
+
+            int32_t mmet_dev = 0;
+            int32_t vmet_dev = 0;
+
+            for (int frame = section_start + edge_cutoff; frame < section_end - edge_cutoff; frame++) {
+                char pattern_match = mics_patterns[p].pattern[(frame + pattern_offset) % mics_patterns[p].pattern.size()];
+                char other_match = pattern_match == 'c' ? 'n' : 'c';
+
+                auto frame_mics = getMics(frame);
+                auto frame_mmetric = getMMetrics(frame);
+                auto frame_vmetric = getVMetrics(frame);
+
+                int16_t mic_pattern_match = frame_mics[matchCharToIndex(pattern_match)];
+                int16_t mic_other_match = frame_mics[matchCharToIndex(other_match)];
+
+                int32_t mmet_pattern_match = frame_mmetric[matchCharToIndexDMetrics(pattern_match)];
+                int32_t mmet_other_match = frame_mmetric[matchCharToIndexDMetrics(other_match)];
+                int32_t vmet_pattern_match = frame_vmetric[matchCharToIndexDMetrics(pattern_match)];
+                int32_t vmet_other_match = frame_vmetric[matchCharToIndexDMetrics(other_match)];
+
+                mic_dev += std::max(0, mic_pattern_match - mic_other_match);
+
+                mmet_dev += std::max(0, mmet_pattern_match - mmet_other_match);
+                vmet_dev += std::max(0, vmet_pattern_match - vmet_other_match);
+            }
+
+            if (mic_dev < mics_patterns[p].mic_dev) {
+                mics_patterns[p].pattern_offset = pattern_offset;
+                mics_patterns[p].mic_dev = mic_dev;
+            }
+
+            if (mmet_dev < dmet_patterns[p].mmet_dev) {
+                dmet_patterns[p].pattern_offset = pattern_offset;
+                dmet_patterns[p].mmet_dev = mmet_dev;
+                dmet_patterns[p].vmet_dev = vmet_dev;
+            }
+        }
+
+        if (mics_patterns[p].mic_dev < best_mic_dev) {
+            best_mic_dev = mics_patterns[p].mic_dev;
+            best_mic_pattern = p;
+        }
+
+        if (dmet_patterns[p].mmet_dev < best_mmet_dev) {
+            best_mmet_dev = dmet_patterns[p].mmet_dev;
+            best_dmet_pattern = p;
+        }
+    }
+
+    int frames_threshold = (section_end - section_start - 2 * edge_cutoff);
+
+    bool good_mics = mics_patterns[best_mic_pattern].mic_dev <= frames_threshold;
+    bool good_dmet = frames_threshold >= dmet_patterns[best_dmet_pattern].vmet_dev;
+
+    if (!good_mics && !good_dmet) {
+        FailedPatternGuessing failure;
+        failure.start = section_start;
+        failure.reason = AmbiguousMatchPattern;
+        pattern_guessing.failures.erase(failure.start);
+        pattern_guessing.failures.insert({ failure.start, failure });
+
+        setModified(true);
+
+        return false;
+    }
+
+    std::string best_pattern = good_mics ? mics_patterns[best_mic_pattern].pattern : dmet_patterns[best_dmet_pattern].pattern;
+    int best_pattern_offset = good_mics ? mics_patterns[best_mic_pattern].pattern_offset : dmet_patterns[best_dmet_pattern].pattern_offset;
+
+    for (int i = section_start; i < section_end; i++)
+        setMatch(i, best_pattern[(i + best_pattern_offset) % best_pattern.size()]);
+    
+    if (section_end == getNumFrames(PostSource) && getMatch(section_end - 1) == 'n')
+        setMatch(section_end - 1, 'b');
+
+    if (section_start == 0 && getMatch(0) == 'b')
+        setMatch(0, 'n');
+
+    if (good_mics) {
+        // If the last frame of the section has much higher mic with c/n matches than with b match, use the b match.
+        char match_index = matchCharToIndex(getMatch(section_end - 1));
+        int16_t mic_cn = getMics(section_end - 1)[match_index];
+        int16_t mic_b = getMics(section_end - 1)[matchCharToIndex('b')];
+        if (mic_cn > mic_b * 2)
+            setMatch(section_end - 1, 'b');
+    } else {
+        // use b match if the range end is too bad at the end of the section
+        char match_index = matchCharToIndexDMetrics(getMatch(section_end - 1));
+        int32_t mmet_cn = getMMetrics(section_end - 1)[match_index];
+        int32_t mmet_n = getMMetrics(section_end - 1)[matchCharToIndexDMetrics('b')];
+        if (mmet_cn > mmet_n * 1.5)
+            setMatch(section_end - 1, 'b');
+    }
+
+    if (best_pattern == "c") {
+        for (int i = section_start; i < section_end; i++)
+            deleteDecimatedFrame(i);
+    } else {
+        int first_duplicate = 4 - best_pattern_offset;
+
+        applyPatternGuessingDecimation(section_start, section_end, first_duplicate, drop_duplicate);
+    }
+
+    pattern_guessing.failures.erase(section_start);
+
+    setModified(true);
+
+    return true;
+}
+
 
 void WobblyProject::guessProjectPatternsFromMics(int minimum_length, int edge_cutoff, int use_patterns, int drop_duplicate) {
     pattern_guessing.failures.clear();
@@ -3273,6 +3454,24 @@ void WobblyProject::guessProjectPatternsFromDMetrics(int minimum_length, int edg
         updateSectionOrphanFrames(it->second.start, getSectionEnd(it->second.start));
 
     pattern_guessing.method = PatternGuessingFromDMetrics;
+    pattern_guessing.minimum_length = minimum_length;
+    pattern_guessing.edge_cutoff = edge_cutoff;
+    pattern_guessing.use_patterns = use_patterns;
+    pattern_guessing.decimation = drop_duplicate;
+
+    setModified(true);
+}
+
+void WobblyProject::guessProjectPatternsFromMicsAndDMetrics(int minimum_length, int edge_cutoff, int use_patterns, int drop_duplicate) {
+    pattern_guessing.failures.clear();
+
+    for (auto it = sections->cbegin(); it != sections->cend(); it++)
+        guessSectionPatternsFromMicsAndDMetrics(it->second.start, minimum_length, edge_cutoff, use_patterns, drop_duplicate);
+
+    for (auto it = sections->cbegin(); it != sections->cend(); it++)
+        updateSectionOrphanFrames(it->second.start, getSectionEnd(it->second.start));
+
+    pattern_guessing.method = PatternGuessingFromMicsAndDMetrics;
     pattern_guessing.minimum_length = minimum_length;
     pattern_guessing.edge_cutoff = edge_cutoff;
     pattern_guessing.use_patterns = use_patterns;

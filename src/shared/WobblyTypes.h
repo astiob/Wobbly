@@ -171,6 +171,7 @@ enum PatternGuessingMethods {
     PatternGuessingFromMatches = 0,
     PatternGuessingFromMics,
     PatternGuessingFromDMetrics,
+    PatternGuessingFromMicsAndDMetrics,
 };
 
 
