@@ -443,7 +443,7 @@ public slots:
     void setDecimationPattern();
     void setMatchAndDecimationPatterns();
 
-    void updateSectionOrphanFrames(int current_frame);
+    void updateSectionOrphanFrames(int frame);
     void updateSectionOrphanFrames(const Section *section);
 
     void guessCurrentSectionPatternsFromMics();

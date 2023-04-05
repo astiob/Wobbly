@@ -5424,11 +5424,11 @@ void WobblyWindow::setMatchAndDecimationPatterns() {
 }
 
 
-void WobblyWindow::updateSectionOrphanFrames(int current_frame) {
+void WobblyWindow::updateSectionOrphanFrames(int frame) {
     if (!project)
         return;
 
-    const Section *section = project->findSection(current_frame);
+    const Section *section = project->findSection(frame);
 
     updateSectionOrphanFrames(section);
 }
