@@ -1,0 +1,59 @@
+name: Build (Windows / MSYS2)
+
+on:
+  push:
+    paths:
+      - 'src/*'
+      - 'rapidjson/*'
+      - 'autogen.sh'
+      - 'configure.ac'
+      - 'Makefile.am'
+      - '.github/workflows/windows.yml'
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    defaults:
+      run:
+        shell: msys2 {0}
+
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 1
+
+    - uses: msys2/setup-msys2@v2
+      with:
+        msystem: mingw64
+        update: true
+        install: git autotools make p7zip mingw-w64-x86_64-gcc mingw-w64-x86_64-qt5-base
+
+    - name: Download VapourSynth
+      run: |
+        curl -o vs.7z -L https://github.com/vapoursynth/vapoursynth/releases/download/R62/VapourSynth64-Portable-R62.7z
+        7z x -ovapoursynth vs.7z
+
+    - name: Configure and build
+      run: |
+        ./autogen.sh
+        VSSCRIPT_CFLAGS="-I vapoursynth/sdk/include/" VSSCRIPT_LIBS="-L vapoursynth/ -l:vsscript.dll" ./configure
+        make -j$(nproc)
+
+    - name: Package
+      run: |
+        mkdir deploy
+        cp wobbly.exe wibbly.exe deploy
+
+        export PATH=$PATH:vapoursynth/
+        ldd wobbly.exe | grep -vi '/windows' | grep -v 'VSScript' | awk '{print $3}' | xargs -l1 cp -t deploy
+        ldd wibbly.exe | grep -vi '/windows' | grep -v 'VSScript' | awk '{print $3}' | xargs -l1 cp -t deploy
+
+        cp -r $MSYSTEM_PREFIX/share/qt5/plugins/{platforms,styles} deploy
+
+    - name: Upload
+      uses: actions/upload-artifact@v3
+      with:
+        name: Wobbly-win64
+        path: deploy
