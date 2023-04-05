@@ -1738,8 +1738,14 @@ int WobblyProject::getPreviousFrameWithMic(int minimum, int start_frame) const {
         throw WobblyException("Can't get the previous frame with mic " + std::to_string(minimum) + " or greater: frame " + std::to_string(start_frame) + " is out of range.");
 
     for (int i = start_frame - 1; i >= 0; i--) {
-        int index = matchCharToIndex(getMatch(i));
-        int16_t mic = getMics(i)[index];
+        int prev_idx = std::max(i - 1, 0);
+        int next_idx = std::min(i + 1, getNumFrames(PostSource) - 1);
+
+        int16_t prev = getMics(prev_idx)[matchCharToIndex(getMatch(prev_idx))];
+        int16_t curr = getMics(i)[matchCharToIndex(getMatch(i))];
+        int16_t next = getMics(next_idx)[matchCharToIndex(getMatch(next_idx))];
+
+        int16_t mic = i == prev_idx ? curr : std::min(curr - prev, curr - next);
 
         if (mic >= minimum)
             return i;
@@ -1754,8 +1760,14 @@ int WobblyProject::getNextFrameWithMic(int minimum, int start_frame) const {
         throw WobblyException("Can't get the next frame with mic " + std::to_string(minimum) + " or greater: frame " + std::to_string(start_frame) + " is out of range.");
 
     for (int i = start_frame + 1; i < getNumFrames(PostSource); i++) {
-        int index = matchCharToIndex(getMatch(i));
-        int16_t mic = getMics(i)[index];
+        int prev_idx = std::max(i - 1, 0);
+        int next_idx = std::min(i + 1, getNumFrames(PostSource) - 1);
+
+        int16_t prev = getMics(prev_idx)[matchCharToIndex(getMatch(prev_idx))];
+        int16_t curr = getMics(i)[matchCharToIndex(getMatch(i))];
+        int16_t next = getMics(next_idx)[matchCharToIndex(getMatch(next_idx))];
+
+        int16_t mic = i == next_idx ? curr : std::min(curr - prev, curr - next);
 
         if (mic >= minimum)
             return i;

@@ -2266,7 +2266,7 @@ void WobblyWindow::createPatternGuessingWindow() {
 void WobblyWindow::createMicSearchWindow() {
     mic_search_minimum_spin = new QSpinBox;
     mic_search_minimum_spin->setRange(0, 256);
-    mic_search_minimum_spin->setPrefix(QStringLiteral("Minimum: "));
+    mic_search_minimum_spin->setPrefix(QStringLiteral("Minimum diff: "));
 
     QPushButton *mic_search_previous_button = new QPushButton("Jump to previous");
     QPushButton *mic_search_next_button = new QPushButton("Jump to next");
