@@ -2056,9 +2056,15 @@ void WobblyProject::setRangeMatchesFromPattern(int range_start, int range_end, c
         throw WobblyException("Can't apply match pattern to frames [" + std::to_string(range_start) + "," + std::to_string(range_end) + "]: frame numbers out of range.");
 
     for (int i = range_start; i <= range_end; i++) {
-        // Skip the first and last frame if their new matches are incompatible.
-        if ((i == 0 && (pattern[i % 5] == 'p' || pattern[i % 5] == 'b')) || (i == getNumFrames(PostSource) - 1 && (pattern[i % 5] == 'n' || pattern[i % 5] == 'u')))
+        if ((i == 0 && (pattern[i % 5] == 'p' || pattern[i % 5] == 'b')))
             continue;
+        
+        if (i == getNumFrames(PostSource) - 1 && (pattern[i % 5] == 'n' || pattern[i % 5] == 'u')) {
+            if (pattern[i % 5] == 'n')
+                setMatch(i, 'b');
+
+            continue;
+        }
 
         if (i == range_end && pattern[i % 5] == 'n')
             setMatch(i, 'b');
