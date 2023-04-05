@@ -171,17 +171,15 @@ void WobblyWindow::readSettings() {
 
     /// Why is it that the default values for some of these settings are kept in this function,
     /// but for others they are kept in createSettingsWindow ?
-    if (settings.contains(KEY_COLORMATRIX))
-        settings_colormatrix_combo->setCurrentText(settings.value(KEY_COLORMATRIX).toString());
+    settings_colormatrix_combo->setCurrentText(settings.value(KEY_COLORMATRIX, "BT 601").toString());
 
-    if (settings.contains(KEY_MAXIMUM_CACHE_SIZE))
-        settings_cache_spin->setValue(settings.value(KEY_MAXIMUM_CACHE_SIZE).toInt());
+    settings_cache_spin->setValue(settings.value(KEY_MAXIMUM_CACHE_SIZE, 4096).toInt());
 
     settings_print_details_check->setChecked(settings.value(KEY_PRINT_DETAILS_ON_VIDEO, true).toBool());
 
-    settings_num_thumbnails_spin->setValue(settings.value(KEY_NUMBER_OF_THUMBNAILS, 3).toInt());
+    settings_num_thumbnails_spin->setValue(settings.value(KEY_NUMBER_OF_THUMBNAILS, 5).toInt());
 
-    settings_thumbnail_size_dspin->setValue(settings.value(KEY_THUMBNAIL_SIZE, 12).toDouble());
+    settings_thumbnail_size_dspin->setValue(settings.value(KEY_THUMBNAIL_SIZE, 15).toDouble());
 
     settings_shortcuts_table->setRowCount(shortcuts.size());
     for (size_t i = 0; i < shortcuts.size(); i++) {
