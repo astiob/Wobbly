@@ -53,3 +53,12 @@ void ScrollArea::mouseMoveEvent(QMouseEvent *e) {
 void ScrollArea::keyPressEvent(QKeyEvent *e) {
     QWidget::keyPressEvent(e);
 }
+
+
+void ScrollArea::wheelEvent(QWheelEvent *e) {
+    if (e->buttons() == Qt::MouseButton::RightButton) {
+        QWidget::wheelEvent(e);
+    } else {
+        QScrollArea::wheelEvent(e);
+    }
+}

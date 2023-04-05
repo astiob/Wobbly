@@ -46,6 +46,7 @@ SOFTWARE.
 #include "ListWidget.h"
 #include "OverlayLabel.h"
 #include "PresetTextEdit.h"
+#include "ScrollArea.h"
 #include "SectionsProxyModel.h"
 #include "SpinBox.h"
 #include "TableView.h"
@@ -76,6 +77,7 @@ private:
     DockWidget *details_dock;
     QTabBar *tab_bar;
     FrameLabel *frame_label;
+    ScrollArea *frame_scroll;
     QLabel *thumb_labels[MAX_THUMBNAILS];
     OverlayLabel *overlay_label;
     QSlider *frame_slider;
@@ -309,6 +311,7 @@ private:
     void dragEnterEvent(QDragEnterEvent *event);
     void dropEvent(QDropEvent *event);
     void keyPressEvent(QKeyEvent *event);
+    void wheelEvent(QWheelEvent *event);
 
     void realOpenProject(const QString &path);
     void realOpenVideo(const QString &path);

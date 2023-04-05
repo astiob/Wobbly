@@ -32,6 +32,7 @@ SOFTWARE.
 #include <QRegExpValidator>
 #include <QScrollArea>
 #include <QShortcut>
+#include <QScrollBar>
 #include <QSpinBox>
 #include <QStatusBar>
 #include <QTabWidget>
@@ -289,6 +290,18 @@ void WobblyWindow::keyPressEvent(QKeyEvent *event) {
     }
 
     QMainWindow::keyPressEvent(event);
+}
+
+
+void WobblyWindow::wheelEvent(QWheelEvent *event) {
+    if (event->buttons() == Qt::MouseButton::RightButton) {
+        if (event->angleDelta().y() > 0)
+            zoomIn();
+        else if (event->angleDelta().ry() < 0)
+            zoomOut();
+    }
+
+    QMainWindow::wheelEvent(event);
 }
 
 
@@ -3081,7 +3094,7 @@ void WobblyWindow::createUI() {
         thumb_labels[i]->setVisible(false);
     }
 
-    ScrollArea *frame_scroll = new ScrollArea;
+    frame_scroll = new ScrollArea;
     frame_scroll->resize(720, 480);
     frame_scroll->setFocusPolicy(Qt::ClickFocus);
     frame_scroll->setAlignment(Qt::AlignCenter);
@@ -4508,6 +4521,8 @@ void WobblyWindow::frameDone(void *framev, int n, bool preview_node, const QStri
     if (offset == 0) {
         int zoom = project->getZoom();
         frame_label->setPixmap(QPixmap::fromImage(image).scaled(width * zoom, height * zoom, Qt::IgnoreAspectRatio, Qt::FastTransformation));
+        frame_scroll->horizontalScrollBar()->setValue(frame_scroll->horizontalScrollBar()->maximum() / 2);
+        frame_scroll->verticalScrollBar()->setValue(frame_scroll->verticalScrollBar()->maximum() / 2);
 
         // setOverrideCursor called in requestFrames
         QApplication::restoreOverrideCursor();
