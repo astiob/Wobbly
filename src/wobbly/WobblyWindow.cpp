@@ -3035,6 +3035,7 @@ void WobblyWindow::createUI() {
 
     overlay_label = new OverlayLabel;
     overlay_label->setAttribute(Qt::WA_TransparentForMouseEvents);
+    overlay_label->setStyleSheet("background-color: none;");
 
     frame_slider = new QSlider(Qt::Horizontal);
     frame_slider->setTracking(false);
