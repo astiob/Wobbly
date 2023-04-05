@@ -100,6 +100,7 @@ class WobblyProject : public QObject {
         std::string ui_geometry;
         std::array<bool, 5> shown_frame_rates = {};
         int mic_search_minimum = 5;
+        int dmetric_search_minimum = 10;
         int c_match_sequences_minimum = 20;
 
         std::string input_file;
@@ -190,6 +191,8 @@ class WobblyProject : public QObject {
         void setDMetrics(int frame, int32_t mmetric_p, int32_t mmetric_c, int32_t vmetric_p, int32_t vmetric_c);
         int getPreviousFrameWithMic(int minimum, int start_frame) const;
         int getNextFrameWithMic(int minimum, int start_frame) const;
+        int getPreviousFrameWithDMetric(int minimum, int start_frame) const;
+        int getNextFrameWithDMetric(int minimum, int start_frame) const;
 
 
         char getOriginalMatch(int frame) const;
@@ -327,6 +330,8 @@ class WobblyProject : public QObject {
         int getMicSearchMinimum() const;
         void setMicSearchMinimum(int minimum);
 
+        int getDMetricSearchMinimum() const;
+        void setDMetricSearchMinimum(int minimum);
 
         int getCMatchSequencesMinimum() const;
         void setCMatchSequencesMinimum(int minimum);

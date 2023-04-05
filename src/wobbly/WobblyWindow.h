@@ -149,6 +149,9 @@ private:
 
     DockWidget *mic_search_dock;
     QSpinBox *mic_search_minimum_spin;
+    
+    DockWidget *dmetric_search_dock;
+    QSpinBox *dmetric_search_minimum_spin;
 
     DockWidget *c_match_sequences_dock;
     QSpinBox *c_match_minimum_spin;
@@ -254,6 +257,7 @@ private:
     void createFrozenFramesViewer();
     void createPatternGuessingWindow();
     void createMicSearchWindow();
+    void createDMetricSearchWindow();
     void createCMatchSequencesWindow();
     void createFadesWindow();
     void createCombedFramesWindow();
@@ -284,6 +288,7 @@ private:
     void updatePatternGuessingWindow();
     void initialisePatternGuessingWindow();
     void initialiseMicSearchWindow();
+    void initialiseDMetricSearchWindow();
     void updateCMatchSequencesWindow();
     void initialiseCMatchSequencesWindow();
     void updateFadesWindow();
@@ -358,6 +363,9 @@ public slots:
 
     void jumpToPreviousMic();
     void jumpToNextMic();
+
+    void jumpToPreviousDMetric();
+    void jumpToNextDMetric();
 
     void jumpToPreviousBookmark();
     void jumpToNextBookmark();

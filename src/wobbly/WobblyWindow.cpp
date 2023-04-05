@@ -427,8 +427,10 @@ void WobblyWindow::createShortcuts() {
         { "", "PgUp",               "Jump 20% forward", &WobblyWindow::jumpALotForward },
         { "", "Ctrl+Up",            "Jump to next section start", &WobblyWindow::jumpToNextSectionStart },
         { "", "Ctrl+Down",          "Jump to previous section start", &WobblyWindow::jumpToPreviousSectionStart },
-        { "", "Up",                 "Jump to next frame with high mic", &WobblyWindow::jumpToNextMic },
-        { "", "Down",               "Jump to previous frame with high mic", &WobblyWindow::jumpToPreviousMic },
+        { "", "Ctrl+Shift+Up",      "Jump to next frame with high mic", &WobblyWindow::jumpToNextMic },
+        { "", "Ctrl+Shift+Down",    "Jump to previous frame with high mic", &WobblyWindow::jumpToPreviousMic },
+        { "", "Up",                 "Jump to next frame with high dmetric", &WobblyWindow::jumpToNextDMetric },
+        { "", "Down",               "Jump to previous frame with high dmetric", &WobblyWindow::jumpToPreviousDMetric },
         { "", "<",                  "Jump to previous bookmark", &WobblyWindow::jumpToPreviousBookmark },
         { "", ">",                  "Jump to next bookmark", &WobblyWindow::jumpToNextBookmark },
         { "", "G",                  "Jump to specific frame", &WobblyWindow::jumpToFrame },
@@ -2315,6 +2317,53 @@ void WobblyWindow::createMicSearchWindow() {
 }
 
 
+void WobblyWindow::createDMetricSearchWindow() {
+    dmetric_search_minimum_spin = new QSpinBox;
+    dmetric_search_minimum_spin->setRange(0, 256);
+    dmetric_search_minimum_spin->setPrefix(QStringLiteral("Minimum diff: "));
+
+    QPushButton *dmetric_search_previous_button = new QPushButton("Jump to previous");
+    QPushButton *dmetric_search_next_button = new QPushButton("Jump to next");
+
+    connect(dmetric_search_minimum_spin, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), [this] (int value) {
+        if (!project)
+            return;
+
+        project->setDMetricSearchMinimum(value);
+    });
+
+    connect(dmetric_search_previous_button, &QPushButton::clicked, this, &WobblyWindow::jumpToPreviousDMetric);
+
+    connect(dmetric_search_next_button, &QPushButton::clicked, this, &WobblyWindow::jumpToNextDMetric);
+
+    QHBoxLayout *hbox = new QHBoxLayout;
+    hbox->addWidget(dmetric_search_minimum_spin);
+    hbox->addStretch(1);
+
+    QVBoxLayout *vbox = new QVBoxLayout;
+    vbox->addLayout(hbox);
+
+    hbox = new QHBoxLayout;
+    hbox->addWidget(dmetric_search_previous_button);
+    hbox->addWidget(dmetric_search_next_button);
+    hbox->addStretch(1);
+
+    vbox->addLayout(hbox);
+    vbox->addStretch(1);
+
+    QWidget *dmetric_search_widget = new QWidget;
+    dmetric_search_widget->setLayout(vbox);
+
+    dmetric_search_dock = new DockWidget("DMetric search", this);
+    dmetric_search_dock->setObjectName("dmetric search window");
+    dmetric_search_dock->setVisible(false);
+    dmetric_search_dock->setFloating(true);
+    dmetric_search_dock->setWidget(dmetric_search_widget);
+    addDockWidget(Qt::RightDockWidgetArea, dmetric_search_dock);
+    tools_menu->addAction(dmetric_search_dock->toggleViewAction());
+    connect(dmetric_search_dock, &DockWidget::visibilityChanged, dmetric_search_dock, &DockWidget::setEnabled);
+}
+
 void WobblyWindow::createCMatchSequencesWindow() {
     c_match_minimum_spin = new QSpinBox;
     c_match_minimum_spin->setRange(4, 999);
@@ -3096,6 +3145,7 @@ void WobblyWindow::createUI() {
     createFrozenFramesViewer();
     createPatternGuessingWindow();
     createMicSearchWindow();
+    createDMetricSearchWindow();
     createCMatchSequencesWindow();
     createFadesWindow();
     createCombedFramesWindow();
@@ -3497,6 +3547,13 @@ void WobblyWindow::initialiseMicSearchWindow() {
 }
 
 
+void WobblyWindow::initialiseDMetricSearchWindow() {
+    {
+        QSignalBlocker block(dmetric_search_minimum_spin);
+        dmetric_search_minimum_spin->setValue(project->getDMetricSearchMinimum());
+    }
+}
+
 void WobblyWindow::updateCMatchSequencesWindow() {
     const auto &sequences = project->getCMatchSequences(c_match_minimum_spin->value());
 
@@ -3627,6 +3684,7 @@ void WobblyWindow::initialiseUIFromProject() {
     initialiseFrozenFramesViewer();
     initialisePatternGuessingWindow();
     initialiseMicSearchWindow();
+    initialiseDMetricSearchWindow();
     initialiseCMatchSequencesWindow();
     updateFadesWindow();
     initialiseCombedFramesWindow();
@@ -4790,6 +4848,24 @@ void WobblyWindow::jumpToNextMic() {
         requestFrames(frame);
 }
 
+void WobblyWindow::jumpToPreviousDMetric() {
+    if (!project)
+        return;
+
+    int frame = project->getPreviousFrameWithDMetric(dmetric_search_minimum_spin->value(), current_frame);
+    if (frame != -1)
+        requestFrames(frame);
+}
+
+
+void WobblyWindow::jumpToNextDMetric() {
+    if (!project)
+        return;
+
+    int frame = project->getNextFrameWithDMetric(dmetric_search_minimum_spin->value(), current_frame);
+    if (frame != -1)
+        requestFrames(frame);
+}
 
 void WobblyWindow::jumpToPreviousBookmark() {
     if (!project)

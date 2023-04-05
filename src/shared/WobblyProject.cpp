@@ -1776,6 +1776,49 @@ int WobblyProject::getNextFrameWithMic(int minimum, int start_frame) const {
     return -1;
 }
 
+int WobblyProject::getPreviousFrameWithDMetric(int minimum, int start_frame) const {
+    if (start_frame < 0 || start_frame >= getNumFrames(PostSource))
+        throw WobblyException("Can't get the previous frame with dmetric " + std::to_string(minimum) + " or greater: frame " + std::to_string(start_frame) + " is out of range.");
+
+    for (int i = start_frame - 1; i >= 0; i--) {
+        int prev_idx = std::max(i - 1, 0);
+        int next_idx = std::min(i + 1, getNumFrames(PostSource) - 1);
+
+        int32_t prev = getVMetrics(prev_idx)[matchCharToIndexDMetrics(getMatch(prev_idx))];
+        int32_t curr = getVMetrics(i)[matchCharToIndexDMetrics(getMatch(i))];
+        int32_t next = getVMetrics(next_idx)[matchCharToIndexDMetrics(getMatch(next_idx))];
+
+        int32_t vmet = i == prev_idx ? curr : std::min(curr - prev, curr - next);
+
+        if (vmet >= minimum)
+            return i;
+    }
+
+    return -1;
+}
+
+
+int WobblyProject::getNextFrameWithDMetric(int minimum, int start_frame) const {
+    if (start_frame < 0 || start_frame >= getNumFrames(PostSource))
+        throw WobblyException("Can't get the next frame with dmetric " + std::to_string(minimum) + " or greater: frame " + std::to_string(start_frame) + " is out of range.");
+
+    for (int i = start_frame + 1; i < getNumFrames(PostSource); i++) {
+        int prev_idx = std::max(i - 1, 0);
+        int next_idx = std::min(i + 1, getNumFrames(PostSource) - 1);
+
+        int32_t prev = getVMetrics(prev_idx)[matchCharToIndexDMetrics(getMatch(prev_idx))];
+        int32_t curr = getVMetrics(i)[matchCharToIndexDMetrics(getMatch(i))];
+        int32_t next = getVMetrics(next_idx)[matchCharToIndexDMetrics(getMatch(next_idx))];
+
+        int32_t vmet = i == next_idx ? curr : std::min(curr - prev, curr - next);
+
+        if (vmet >= minimum)
+            return i;
+    }
+
+    return -1;
+}
+
 
 char WobblyProject::getOriginalMatch(int frame) const {
     if (frame < 0 || frame >= getNumFrames(PostSource))
@@ -2826,6 +2869,15 @@ int WobblyProject::getMicSearchMinimum() const {
 
 void WobblyProject::setMicSearchMinimum(int minimum) {
     mic_search_minimum = minimum;
+}
+
+int WobblyProject::getDMetricSearchMinimum() const {
+    return dmetric_search_minimum;
+}
+
+
+void WobblyProject::setDMetricSearchMinimum(int minimum) {
+    dmetric_search_minimum = minimum;
 }
 
 
