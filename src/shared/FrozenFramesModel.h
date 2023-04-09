@@ -28,7 +28,7 @@ SOFTWARE.
 #include "WobblyTypes.h"
 
 
-class FrozenFramesModel : public QAbstractTableModel, private FreezeFrameMap {
+class FrozenFramesModel : public QAbstractTableModel, public FreezeFrameMap {
     Q_OBJECT
 
     enum Columns {
@@ -57,6 +57,8 @@ public:
     void insert(const value_type &freeze_frame);
 
     void erase(int freeze_frame);
+
+    void clear();
 };
 
 #endif // FROZENFRAMESMODEL_H

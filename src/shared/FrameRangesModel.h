@@ -30,7 +30,7 @@ struct FrameRange {
 };
 
 
-class FrameRangesModel : public QAbstractTableModel, private std::map<int, FrameRange> {
+class FrameRangesModel : public QAbstractTableModel, public std::map<int, FrameRange> {
     Q_OBJECT
 
     enum Columns {

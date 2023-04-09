@@ -2589,6 +2589,18 @@ std::map<size_t, size_t> WobblyProject::getCMatchSequences(int minimum) const {
 }
 
 
+void WobblyProject::updateOrphanFrames() {
+    // Find the ends manually so this is not O(#sections^2)
+    auto it = sections->cbegin();
+    while (it != sections->cend()) {
+        int section_start = it->second.start;
+        it++;
+        int section_end = it == sections->cend() ? getNumFrames(PostSource) : it->second.start;
+
+        updateSectionOrphanFrames(section_start, section_end);
+    }
+}
+
 void WobblyProject::updateSectionOrphanFrames(int section_start, int section_end) {
     if (getMatch(section_start) == 'n')
         addOrphanFrame({ section_start, 'n' });
@@ -2806,6 +2818,108 @@ void WobblyProject::setModified(bool modified) {
 
         emit modifiedChanged(modified);
     }
+}
+
+
+std::string WobblyProject::getUndoDescription() {
+    if (undo_stack.size() <= 1)
+        return "";
+    return undo_stack.back().description;
+}
+
+std::string WobblyProject::getRedoDescription() {
+    if (redo_stack.empty())
+        return "";
+    return redo_stack.back().description;
+}
+
+void WobblyProject::restoreState(UndoStep state) {
+    matches = state.matches;
+    decimated_frames = state.decimated_frames;
+    pattern_guessing = state.pattern_guessing;
+
+    presets->clear();
+    for (auto const& p : state.presets)
+        presets->insert(p);
+
+    custom_lists->clear();
+    for (auto const& c : state.custom_lists) {
+        custom_lists->push_back(c);
+        custom_lists->back().ranges = std::make_shared<FrameRangesModel>();
+        for (auto const& r : *c.ranges)
+            custom_lists->back().ranges->insert(r);
+    }
+
+    combed_frames->clear();
+    for (auto const& c : state.combed_frames)
+        combed_frames->insert(c);
+
+    frozen_frames->clear();
+    for (auto const& f : state.frozen_frames)
+        frozen_frames->insert(f);
+
+    sections->clear();
+    for (auto const& s : state.sections)
+        sections->insert(s);
+
+    bookmarks->clear();
+    for (auto const& b : state.bookmarks)
+        bookmarks->insert(b);
+}
+
+void WobblyProject::commit(std::string description) {
+    UndoStep step = {
+        .description = description,
+        .matches = matches,
+        .decimated_frames = decimated_frames,
+        .pattern_guessing = pattern_guessing,
+
+        .presets = *presets,
+        .custom_lists = *custom_lists,
+        .combed_frames = *combed_frames,
+        .frozen_frames = *frozen_frames,
+        .sections = *sections,
+        .bookmarks = *bookmarks,
+    };
+    for (auto &cl : step.custom_lists) {
+        std::shared_ptr<FrameRangesModel> oldranges = cl.ranges;
+        cl.ranges = std::make_shared<FrameRangesModel>();
+
+        for (auto const& r : *oldranges)
+            cl.ranges->insert(r);
+    }
+
+    undo_stack.push_back(step);
+
+    redo_stack.clear();
+
+    while (undo_stack.size() > undo_steps)
+        undo_stack.pop_front();
+}
+
+void WobblyProject::undo() {
+    if (undo_stack.size() <= 1) return;
+    redo_stack.push_back(undo_stack.back());
+    undo_stack.pop_back();
+    restoreState(undo_stack.back());
+}
+
+void WobblyProject::redo() {
+    if (redo_stack.empty()) return;
+    restoreState(redo_stack.back());
+    undo_stack.push_back(redo_stack.back());
+    redo_stack.pop_back();
+}
+
+void WobblyProject::setUndoSteps(size_t steps) {
+    undo_steps = steps;
+    if (undo_steps < redo_stack.size()) {
+        undo_stack.clear();
+        while (undo_steps < redo_stack.size())
+            redo_stack.pop_front();
+    }
+    while (undo_steps < undo_stack.size() + redo_stack.size())
+        undo_stack.pop_front();
 }
 
 
@@ -3495,8 +3609,7 @@ void WobblyProject::guessProjectPatternsFromMics(int minimum_length, int edge_cu
     for (auto it = sections->cbegin(); it != sections->cend(); it++)
         guessSectionPatternsFromMics(it->second.start, minimum_length, edge_cutoff, use_patterns, drop_duplicate);
 
-    for (auto it = sections->cbegin(); it != sections->cend(); it++)
-        updateSectionOrphanFrames(it->second.start, getSectionEnd(it->second.start));
+    updateOrphanFrames();
 
     pattern_guessing.method = PatternGuessingFromMics;
     pattern_guessing.minimum_length = minimum_length;
@@ -3514,8 +3627,7 @@ void WobblyProject::guessProjectPatternsFromDMetrics(int minimum_length, int edg
     for (auto it = sections->cbegin(); it != sections->cend(); it++)
         guessSectionPatternsFromDMetrics(it->second.start, minimum_length, edge_cutoff, use_patterns, drop_duplicate);
 
-    for (auto it = sections->cbegin(); it != sections->cend(); it++)
-        updateSectionOrphanFrames(it->second.start, getSectionEnd(it->second.start));
+    updateOrphanFrames();
 
     pattern_guessing.method = PatternGuessingFromDMetrics;
     pattern_guessing.minimum_length = minimum_length;
@@ -3532,8 +3644,7 @@ void WobblyProject::guessProjectPatternsFromMicsAndDMetrics(int minimum_length, 
     for (auto it = sections->cbegin(); it != sections->cend(); it++)
         guessSectionPatternsFromMicsAndDMetrics(it->second.start, minimum_length, edge_cutoff, use_patterns, drop_duplicate);
 
-    for (auto it = sections->cbegin(); it != sections->cend(); it++)
-        updateSectionOrphanFrames(it->second.start, getSectionEnd(it->second.start));
+    updateOrphanFrames();
 
     pattern_guessing.method = PatternGuessingFromMicsAndDMetrics;
     pattern_guessing.minimum_length = minimum_length;
@@ -3668,8 +3779,7 @@ void WobblyProject::guessProjectPatternsFromMatches(int minimum_length, int edge
     for (auto it = sections->cbegin(); it != sections->cend(); it++)
         guessSectionPatternsFromMatches(it->second.start, minimum_length, edge_cutoff, use_third_n_match, drop_duplicate);
 
-    for (auto it = sections->cbegin(); it != sections->cend(); it++)
-        updateSectionOrphanFrames(it->second.start, getSectionEnd(it->second.start));
+    updateOrphanFrames();
 
     pattern_guessing.method = PatternGuessingFromMatches;
     pattern_guessing.minimum_length = minimum_length;

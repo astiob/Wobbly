@@ -105,6 +105,15 @@ void CustomListsModel::erase(int list_index) {
 }
 
 
+void CustomListsModel::clear() {
+    if (!size()) return;
+
+    beginRemoveRows(QModelIndex(), 0, size() - 1);
+    CustomListVector::clear();
+    endRemoveRows();
+}
+
+
 void CustomListsModel::moveCustomListUp(int list_index) {
     if (beginMoveRows(QModelIndex(), list_index, list_index, QModelIndex(), list_index - 1)) {
         std::swap(at(list_index - 1), at(list_index));

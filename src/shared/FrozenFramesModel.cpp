@@ -111,3 +111,11 @@ void FrozenFramesModel::erase(int freeze_frame) {
 
     endRemoveRows();
 }
+
+void FrozenFramesModel::clear() {
+    if (!size()) return;
+
+    beginRemoveRows(QModelIndex(), 0, size() - 1);
+    FreezeFrameMap::clear();
+    endRemoveRows();
+}

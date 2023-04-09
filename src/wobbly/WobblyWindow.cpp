@@ -64,6 +64,7 @@ SOFTWARE.
 #define KEY_COLORMATRIX                     QStringLiteral("user_interface/colormatrix")
 #define KEY_MAXIMUM_CACHE_SIZE              QStringLiteral("user_interface/maximum_cache_size")
 #define KEY_PRINT_DETAILS_ON_VIDEO          QStringLiteral("user_interface/print_details_on_video")
+#define KEY_UNDO_STEPS                      QStringLiteral("user_interface/undo_steps")
 #define KEY_NUMBER_OF_THUMBNAILS            QStringLiteral("user_interface/number_of_thumbnails")
 #define KEY_THUMBNAIL_SIZE                  QStringLiteral("user_interface/thumbnail_size")
 #define KEY_LAST_DIR                        QStringLiteral("user_interface/last_dir")
@@ -178,6 +179,8 @@ void WobblyWindow::readSettings() {
     settings_cache_spin->setValue(settings.value(KEY_MAXIMUM_CACHE_SIZE, 4096).toInt());
 
     settings_print_details_check->setChecked(settings.value(KEY_PRINT_DETAILS_ON_VIDEO, true).toBool());
+
+    settings_undo_steps_spin->setValue(settings.value(KEY_UNDO_STEPS, 50).toInt());
 
     settings_num_thumbnails_spin->setValue(settings.value(KEY_NUMBER_OF_THUMBNAILS, 5).toInt());
 
@@ -311,6 +314,18 @@ void WobblyWindow::createMenu() {
 
     QMenu *p = bar->addMenu("&Project");
 
+    undo_action = new QAction("Undo", this);
+    undo_action->setEnabled(false);
+    redo_action = new QAction("Redo", this);
+    redo_action->setEnabled(false);
+
+    connect(undo_action, &QAction::triggered, this, &WobblyWindow::undo);
+    connect(redo_action, &QAction::triggered, this, &WobblyWindow::redo);
+
+    p->addAction(undo_action);
+    p->addAction(redo_action);
+    p->addSeparator();
+
     struct Menu {
         const char *name;
         void (WobblyWindow::* func)();
@@ -409,6 +424,8 @@ void WobblyWindow::createShortcuts() {
         { "", "",                   "Save timecodes as", &WobblyWindow::saveTimecodesAs },
         { "", "",                   "Save screenshot", &WobblyWindow::saveScreenshot },
         { "", "",                   "Import from project", &WobblyWindow::importFromProject },
+        { "", "Ctrl+Z",             "Undo", &WobblyWindow::undo },
+        { "", "Ctrl+Y",             "Redo", &WobblyWindow::redo },
         { "", "",                   "Quit", &WobblyWindow::quit },
 
         { "", "",                   "Show or hide frame details", &WobblyWindow::showHideFrameDetails },
@@ -882,6 +899,7 @@ void WobblyWindow::createPresetEditor() {
                         selected = preset_combo->itemText(selected_index);
 
                     project->addPreset(preset_name.toStdString());
+                    commit("Add preset");
 
                     if (selected_index > -1)
                         setSelectedPreset(preset_combo->findText(selected));
@@ -916,6 +934,7 @@ void WobblyWindow::createPresetEditor() {
             if (!preset_name.isEmpty() && preset_name != preset_combo->currentText()) {
                 try {
                     project->renamePreset(preset_combo->currentText().toStdString(), preset_name.toStdString());
+                    commit("Rename preset");
 
                     int index = preset_combo->findText(preset_name);
                     setSelectedPreset(index);
@@ -952,6 +971,7 @@ void WobblyWindow::createPresetEditor() {
         }
 
         project->deletePreset(preset);
+        commit("Delete preset");
 
         setSelectedPreset(selected_preset);
 
@@ -1116,6 +1136,7 @@ void WobblyWindow::createSectionsEditor() {
         for (size_t i = 0; i < sections.size(); i++)
             if (sections[i].start != 0)
                 project->deleteSection(sections[i].start);
+        commit("Delete section(s)");
 
         bool update_needed = false;
 
@@ -1199,6 +1220,7 @@ void WobblyWindow::createSectionsEditor() {
 
         for (size_t i = 0; i < preset_indexes.size(); i++)
             project->moveSectionPresetUp(section_start, preset_indexes[i]);
+        commit("Move section preset");
 
         for (size_t i = 0; i < preset_indexes.size(); i++)
             section_presets_list->item(preset_indexes[i] - 1)->setSelected(true);
@@ -1243,6 +1265,7 @@ void WobblyWindow::createSectionsEditor() {
 
         for (int i = preset_indexes.size() - 1; i >= 0; i--)
             project->moveSectionPresetDown(section_start, preset_indexes[i]);
+        commit("Move section preset");
 
         for (size_t i = 0; i < preset_indexes.size(); i++)
             section_presets_list->item(preset_indexes[i] + 1)->setSelected(true);
@@ -1284,6 +1307,7 @@ void WobblyWindow::createSectionsEditor() {
 
         for (int i = preset_indexes.size() - 1; i >= 0; i--)
             project->deleteSectionPreset(section_start, preset_indexes[i]);
+        commit("Remove preset from section");
 
         if (preview) {
             try {
@@ -1313,6 +1337,7 @@ void WobblyWindow::createSectionsEditor() {
                     if (ok)
                         project->setSectionPreset(section_start, preset->data().toString().toStdString());
                 }
+            commit("Add preset to section");
 
             if (selected_sections.size()) {
                 if (preview) {
@@ -1455,6 +1480,7 @@ void WobblyWindow::createCustomListsEditor() {
             if (!cl_name.isEmpty()) {
                 try {
                     project->addCustomList(cl_name.toStdString());
+                    commit("Add custom list");
 
                     ok = true;
                 } catch (WobblyException &e) {
@@ -1493,6 +1519,7 @@ void WobblyWindow::createCustomListsEditor() {
             if (!new_name.isEmpty()) {
                 try {
                     project->renameCustomList(old_name.toStdString(), new_name.toStdString());
+                    commit("Rename custom list");
 
                     if (cl_index == getSelectedCustomList())
                         setSelectedCustomList(cl_index);
@@ -1536,6 +1563,7 @@ void WobblyWindow::createCustomListsEditor() {
             else if (indexes[i] < selected_custom_list)
                 selected_custom_list--;
         }
+        commit("Delete custom list(s)");
 
         if (cl_view->model()->rowCount())
             cl_view->selectRow(cl_view->currentIndex().row());
@@ -1582,6 +1610,7 @@ void WobblyWindow::createCustomListsEditor() {
             if (indexes[i] == selected_custom_list + 1)
                 selected_custom_list++;
         }
+        commit("Move custom list(s)");
 
         if (preview && update_needed) {
             try {
@@ -1625,6 +1654,7 @@ void WobblyWindow::createCustomListsEditor() {
             if (indexes[i] == selected_custom_list - 1)
                 selected_custom_list--;
         }
+        commit("Move custom list(s)");
 
         if (preview && update_needed) {
             try {
@@ -1652,6 +1682,7 @@ void WobblyWindow::createCustomListsEditor() {
         bool update_needed = project->isCustomListInUse(cl_index) && project->getCustomListPreset(cl_index) != text.toStdString();
 
         project->setCustomListPreset(cl_index, text.toStdString());
+        commit("Set custom list preset");
 
         if (preview && update_needed) {
             try {
@@ -1679,6 +1710,7 @@ void WobblyWindow::createCustomListsEditor() {
         bool update_needed = project->isCustomListInUse(cl_index) && new_position != project->getCustomListPosition(cl_index);
 
         project->setCustomListPosition(cl_index, new_position);
+        commit("Set custom list position");
 
         if (preview && update_needed) {
             try {
@@ -1733,6 +1765,7 @@ void WobblyWindow::createCustomListsEditor() {
 
         for (size_t i = 0; i < frames.size(); i++)
             project->deleteCustomListRange(cl_index, frames[i]);
+        commit("Delete frames from custom list");
 
         if (cl_ranges_view->model()->rowCount())
             cl_ranges_view->selectRow(cl_ranges_view->currentIndex().row());
@@ -1793,6 +1826,7 @@ void WobblyWindow::createCustomListsEditor() {
             const FrameRange *range = project->findCustomListRange(cl_src_index, selection[i].data().toInt());
             project->addCustomListRange(cl_dst_index, range->first, range->last);
         }
+        commit("Copy frames to custom list");   // This implementation copies the frames and then deletes them, which creates two undo events, but it's not really worth the effort to fix...
 
         // An update is only needed if the source custom list wasn't in use before deleting the ranges
         // and the destination custom list is in use after adding the ranges.
@@ -1836,6 +1870,7 @@ void WobblyWindow::createCustomListsEditor() {
             const FrameRange *range = project->findCustomListRange(cl_src_index, selection[i].data().toInt());
             project->addCustomListRange(cl_dst_index, range->first, range->last);
         }
+        commit("Copy frames to custom list");
 
         bool update_needed = project->isCustomListInUse(cl_dst_index);
 
@@ -2009,6 +2044,7 @@ void WobblyWindow::createFrozenFramesViewer() {
 
         for (size_t i = 0 ; i < frames.size(); i++)
             project->deleteFreezeFrame(frames[i]);
+        commit("Delete frozen frames");
 
         if (frozen_frames_view->model()->rowCount())
             frozen_frames_view->selectRow(frozen_frames_view->currentIndex().row());
@@ -2519,6 +2555,7 @@ void WobblyWindow::createCombedFramesWindow() {
 
         for (size_t i = 0 ; i < frames.size(); i++)
             project->deleteCombedFrame(frames[i]);
+        commit("Delete combed frame(s)");
 
         if (combed_view->model()->rowCount())
             combed_view->selectRow(combed_view->currentIndex().row());
@@ -2569,6 +2606,7 @@ void WobblyWindow::createCombedFramesWindow() {
             for (auto it = combed_frames.cbegin(); it != combed_frames.cend(); it++)
                 project->addCombedFrame(project->frameNumberBeforeDecimation(*it));
 
+            commit("Find combed frames");
             updateFrameDetails();
         });
 
@@ -2683,6 +2721,7 @@ void WobblyWindow::createBookmarksWindow() {
 
         for (size_t i = 0 ; i < frames.size(); i++)
             project->deleteBookmark(frames[i]);
+        commit("Delete bookmark(s)");
 
         if (bookmarks_view->model()->rowCount())
             bookmarks_view->selectRow(bookmarks_view->currentIndex().row());
@@ -2747,6 +2786,9 @@ void WobblyWindow::createSettingsWindow() {
     settings_cache_spin->setRange(1, 99999);
     settings_cache_spin->setValue(4096);
     settings_cache_spin->setSuffix(QStringLiteral(" MiB"));
+
+    settings_undo_steps_spin = new SpinBox;
+    settings_undo_steps_spin->setRange(0, 1000);
 
     settings_num_thumbnails_spin = new SpinBox;
     settings_num_thumbnails_spin->setRange(-1, 21);
@@ -2826,6 +2868,12 @@ void WobblyWindow::createSettingsWindow() {
 
     connect(settings_cache_spin, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), [this] (int value) {
         settings.setValue(KEY_MAXIMUM_CACHE_SIZE, value);
+    });
+
+    connect(settings_undo_steps_spin, static_cast<void (SpinBox::*)(int)>(&SpinBox::valueChanged), [this] (int value) {
+        if (project)
+            project->setUndoSteps(size_t(value));
+        settings.setValue(KEY_UNDO_STEPS, value);
     });
 
     connect(settings_num_thumbnails_spin, static_cast<void (SpinBox::*)(int)>(&SpinBox::valueChanged), [this] (int num_thumbnails) {
@@ -2944,6 +2992,7 @@ void WobblyWindow::createSettingsWindow() {
     form->addRow(QStringLiteral("Application style"), application_style_combo);
     form->addRow(QStringLiteral("Colormatrix"), settings_colormatrix_combo);
     form->addRow(QStringLiteral("Maximum cache size"), settings_cache_spin);
+    form->addRow(QStringLiteral("Maximum undo steps"), settings_undo_steps_spin);
     form->addRow(QStringLiteral("Number of thumbnails"), settings_num_thumbnails_spin);
     form->addRow(QStringLiteral("Thumbnail size"), settings_thumbnail_size_dspin);
 
@@ -3684,6 +3733,7 @@ void WobblyWindow::initialiseBookmarksWindow() {
     bookmarks_view->setModel(project->getBookmarksModel());
 
     connect(project->getBookmarksModel(), &BookmarksModel::dataChanged, [this] (const QModelIndex &topLeft, const QModelIndex &bottomRight) {
+        commit("Rename bookmark");
         if (topLeft == bottomRight) {
             int frame = bookmarks_view->model()->index(topLeft.row(), BookmarksModel::FrameColumn).data().toInt();
 
@@ -3706,6 +3756,9 @@ void WobblyWindow::initialiseUIFromProject() {
     zoom_label->setText(QStringLiteral("Zoom: %1x").arg(project->getZoom()));
 
     updateGeometry();
+
+    project->setUndoSteps(size_t(settings.value(KEY_UNDO_STEPS, 50).toInt()));
+    project->updateOrphanFrames();
 
     initialiseCropAssistant();
     initialisePresetEditor();
@@ -3746,6 +3799,7 @@ void WobblyWindow::realOpenProject(const QString &path) {
         current_frame = project->getLastVisitedFrame();
 
         initialiseUIFromProject();
+        project->commit("Initial");
 
         vssapi->evaluateBuffer(vsscript, "vs.clear_output(1)", "wobbly.cleanup");
 
@@ -3856,6 +3910,7 @@ void WobblyWindow::realOpenVideo(const QString &path) {
         project_path.clear();
 
         initialiseUIFromProject();
+        project->commit("Initial");
 
         vssapi->evaluateBuffer(vsscript, "vs.clear_output(1)", "wobbly.cleanup");
 
@@ -4976,6 +5031,7 @@ void WobblyWindow::cycleMatchBCN() {
         return;
 
     project->cycleMatchBCN(current_frame);
+    commit("Cycle frame's match");
 
     updateSectionOrphanFrames(current_frame);
 
@@ -4998,6 +5054,7 @@ void WobblyWindow::freezeForward() {
 
     try {
         project->addFreezeFrame(current_frame, current_frame, current_frame + 1);
+        commit("Add freeze frame");
 
         evaluateScript(preview);
     } catch (WobblyException &e) {
@@ -5016,6 +5073,7 @@ void WobblyWindow::freezeBackward() {
 
     try {
         project->addFreezeFrame(current_frame, current_frame, current_frame - 1);
+        commit("Add freeze frame");
 
         evaluateScript(preview);
     } catch (WobblyException &e) {
@@ -5049,6 +5107,7 @@ void WobblyWindow::freezeRange() {
         ff.replacement = current_frame;
         try {
             project->addFreezeFrame(ff.first, ff.last, ff.replacement);
+            commit("Freeze range");
 
             evaluateScript(preview);
         } catch (WobblyException &e) {
@@ -5070,6 +5129,7 @@ void WobblyWindow::deleteFreezeFrame() {
     const FreezeFrame *ff = project->findFreezeFrame(current_frame);
     if (ff) {
         project->deleteFreezeFrame(ff->first);
+        commit("Delete freeze frame");
 
         try {
             evaluateScript(preview);
@@ -5104,6 +5164,7 @@ void WobblyWindow::toggleDecimation() {
         project->deleteDecimatedFrame(current_frame);
     else
         project->addDecimatedFrame(current_frame);
+    commit("Toggle decimation");
 
     if (preview) {
         try {
@@ -5149,6 +5210,8 @@ void WobblyWindow::toggleCombed() {
         for (int i = start; i <= end; i++)
             project->addCombedFrame(i);
 
+    commit("Toggle combed");
+
     /// Uncomment if combed frames ever get filtered
 //    if (preview) {
 //        try {
@@ -5180,6 +5243,7 @@ void WobblyWindow::toggleBookmark() {
         if (ok)
             project->addBookmark(current_frame, description.toStdString());
     }
+    commit("Toggle bookmark");
 
     updateFrameDetails();
 }
@@ -5192,6 +5256,7 @@ void WobblyWindow::addSection() {
     const Section *section = project->findSection(current_frame);
     if (section->start != current_frame) {
         project->addSection(current_frame);
+        commit("Add section");
 
         if (preview && section->presets.size()) {
             try {
@@ -5224,6 +5289,7 @@ void WobblyWindow::deleteSection() {
         }
 
         project->deleteSection(section->start);
+        commit("Delete section");
 
         if (update_needed) {
             try {
@@ -5258,7 +5324,12 @@ void WobblyWindow::presetEdited() {
     if (preset_combo->currentIndex() == -1)
         return;
 
-    project->setPresetContents(preset_combo->currentText().toStdString(), preset_edit->toPlainText().toStdString());
+    std::string name = preset_combo->currentText().toStdString();
+    std::string contents = preset_edit->toPlainText().toStdString();
+    if (contents != project->getPresetContents(name)) {
+        project->setPresetContents(name, contents);
+        commit("Edit preset");
+    }
 }
 
 
@@ -5282,6 +5353,7 @@ void WobblyWindow::resetMatch() {
 
 
     project->resetRangeMatches(start, end);
+    commit("Reset match(es)");
 
     updateSectionOrphanFrames(current_frame);
 
@@ -5302,6 +5374,7 @@ void WobblyWindow::resetSection() {
     const Section *section = project->findSection(current_frame);
 
     project->resetSectionMatches(section->start);
+    commit("Reset section");
 
     updateSectionOrphanFrames(section);
 
@@ -5333,6 +5406,7 @@ void WobblyWindow::rotateAndSetPatterns() {
 
     project->setSectionMatchesFromPattern(section->start, match_pattern.toStdString());
     project->setSectionDecimationFromPattern(section->start, decimation_pattern.toStdString());
+    commit("Rotate section pattern");
 
     updateSectionOrphanFrames(section);
 
@@ -5358,6 +5432,7 @@ void WobblyWindow::setMatchPattern() {
     finishRange();
 
     project->setRangeMatchesFromPattern(range_start, range_end, match_pattern.toStdString());
+    commit("Set match pattern to range");
 
     cancelRange();
 
@@ -5383,6 +5458,7 @@ void WobblyWindow::setDecimationPattern() {
     finishRange();
 
     project->setRangeDecimationFromPattern(range_start, range_end, decimation_pattern.toStdString());
+    commit("Set decimation pattern to range");
 
     cancelRange();
 
@@ -5407,6 +5483,7 @@ void WobblyWindow::setMatchAndDecimationPatterns() {
 
     project->setRangeMatchesFromPattern(range_start, range_end, match_pattern.toStdString());
     project->setRangeDecimationFromPattern(range_start, range_end, decimation_pattern.toStdString());
+    commit("Set match and decimation patterns to range");
 
     cancelRange();
 
@@ -5460,6 +5537,7 @@ void WobblyWindow::guessCurrentSectionPatternsFromMics() {
 
     try {
         success = project->guessSectionPatternsFromMics(section_start, pg_length_spin->value(), pg_edge_cutoff->value(), use_patterns, pg_decimate_buttons->checkedId());
+        commit("Guess section patterns from mics");
     } catch (WobblyException &e) {
         QApplication::restoreOverrideCursor();
 
@@ -5505,6 +5583,7 @@ void WobblyWindow::guessCurrentSectionPatternsFromDMetrics() {
 
     try {
         success = project->guessSectionPatternsFromDMetrics(section_start, pg_length_spin->value(), pg_edge_cutoff->value(), use_patterns, pg_decimate_buttons->checkedId());
+        commit("Guess section patterns from dmetrics");
     } catch (WobblyException &e) {
         QApplication::restoreOverrideCursor();
 
@@ -5550,6 +5629,7 @@ void WobblyWindow::guessCurrentSectionPatternsFromMicsAndDMetrics() {
 
     try {
         success = project->guessSectionPatternsFromMicsAndDMetrics(section_start, pg_length_spin->value(), pg_edge_cutoff->value(), use_patterns, pg_decimate_buttons->checkedId());
+        commit("Guess section patterns from mics and dmetrics");
     } catch (WobblyException &e) {
         QApplication::restoreOverrideCursor();
 
@@ -5593,6 +5673,7 @@ void WobblyWindow::guessProjectPatternsFromMics() {
         project->clearOrphanFrames();
 
         project->guessProjectPatternsFromMics(pg_length_spin->value(), pg_edge_cutoff->value(), use_patterns, pg_decimate_buttons->checkedId());
+        commit("Guess project patterns from mics");
 
         QApplication::restoreOverrideCursor();
 
@@ -5627,6 +5708,7 @@ void WobblyWindow::guessProjectPatternsFromDMetrics() {
         project->clearOrphanFrames();
 
         project->guessProjectPatternsFromDMetrics(pg_length_spin->value(), pg_edge_cutoff->value(), use_patterns, pg_decimate_buttons->checkedId());
+        commit("Guess section patterns from dmetrics");
 
         QApplication::restoreOverrideCursor();
 
@@ -5661,6 +5743,7 @@ void WobblyWindow::guessProjectPatternsFromMicsAndDMetrics() {
         project->clearOrphanFrames();
 
         project->guessProjectPatternsFromMicsAndDMetrics(pg_length_spin->value(), pg_edge_cutoff->value(), use_patterns, pg_decimate_buttons->checkedId());
+        commit("Guess project patterns from mics and dmetrics");
 
         QApplication::restoreOverrideCursor();
 
@@ -5688,6 +5771,7 @@ void WobblyWindow::guessCurrentSectionPatternsFromMatches() {
     int section_start = project->findSection(current_frame)->start;
 
     bool success = project->guessSectionPatternsFromMatches(section_start, pg_length_spin->value(), pg_edge_cutoff->value(), pg_n_match_buttons->checkedId(), pg_decimate_buttons->checkedId());
+    commit("Guess section patterns from matches");
 
     updatePatternGuessingWindow();
 
@@ -5716,6 +5800,7 @@ void WobblyWindow::guessProjectPatternsFromMatches() {
     project->clearOrphanFrames();
 
     project->guessProjectPatternsFromMatches(pg_length_spin->value(), pg_edge_cutoff->value(), pg_n_match_buttons->checkedId(), pg_decimate_buttons->checkedId());
+    commit("Guess project patterns from matches");
 
     updatePatternGuessingWindow();
 
@@ -5758,6 +5843,64 @@ void WobblyWindow::togglePreview() {
         QSignalBlocker block(tab_bar);
         tab_bar->setCurrentIndex((int)preview);
     }
+}
+
+void WobblyWindow::undo() {
+    if (!project) return;
+    project->undo();
+    updateAfterUndo();
+}
+
+void WobblyWindow::redo() {
+    if (!project) return;
+    project->redo();
+    updateAfterUndo();
+}
+
+void WobblyWindow::commit(std::string message) {
+    if (!project) return;
+    project->commit(message);
+
+    updateUndoActions();
+}
+
+void WobblyWindow::updateUndoActions() {
+    if (!project) {
+        undo_action->setEnabled(false);
+        redo_action->setEnabled(false);
+    } else {
+        std::string undo_text = project->getUndoDescription();
+        std::string redo_text = project->getRedoDescription();
+
+        if (undo_text.empty()) {
+            undo_action->setEnabled(false);
+            undo_action->setText("Undo");
+        } else {
+            undo_action->setEnabled(true);
+            undo_action->setText(QStringLiteral("Undo %1").arg(QString::fromStdString(undo_text)));
+        }
+
+        if (redo_text.empty()) {
+            redo_action->setEnabled(false);
+            redo_action->setText("Redo");
+        } else {
+            redo_action->setEnabled(true);
+            redo_action->setText(QStringLiteral("Redo %1").arg(QString::fromStdString(redo_text)));
+        }
+    }
+}
+
+void WobblyWindow::updateAfterUndo() {
+    updateUndoActions();
+
+    project->updateOrphanFrames();
+    updateFrameRatesViewer();
+    updatePatternGuessingWindow();
+    updateCMatchSequencesWindow();
+    updateFadesWindow();
+    presetChanged(preset_combo->currentText());
+
+    evaluateMainDisplayScript();
 }
 
 
@@ -5973,6 +6116,7 @@ void WobblyWindow::assignSelectedPresetToCurrentSection() {
 
     int section_start = project->findSection(current_frame)->start;
     project->setSectionPreset(section_start, presets_model->data(presets_model->index(selected_preset)).toString().toStdString());
+    commit("Assign preset");
 
     if (preview) {
         try {
@@ -6011,6 +6155,7 @@ void WobblyWindow::addRangeToSelectedCustomList() {
 
     try {
         project->addCustomListRange(selected_custom_list, start, end);
+        commit("Add range to custom list");
 
         updateFrameDetails();
     } catch (WobblyException &e) {

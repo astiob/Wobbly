@@ -70,6 +70,8 @@ private:
 
     QMenu *recent_menu;
 
+    QAction *undo_action;
+    QAction *redo_action;
 
 
     // Widgets.
@@ -180,6 +182,7 @@ private:
     QCheckBox *settings_use_relative_paths_check;
     QComboBox *settings_colormatrix_combo;
     QSpinBox *settings_cache_spin;
+    SpinBox *settings_undo_steps_spin;
     QCheckBox *settings_print_details_check;
     QCheckBox *settings_bookmark_description_check;
     SpinBox *settings_num_thumbnails_spin;
@@ -459,6 +462,12 @@ public slots:
 
     void zoomIn();
     void zoomOut();
+
+    void undo();
+    void redo();
+    void commit(std::string message);
+    void updateUndoActions();
+    void updateAfterUndo();
 
     void vsLogPopup(int msgType, const QString &msg);
     void frameDone(void *framev, int n, bool preview_node, const QString &errorMsg);

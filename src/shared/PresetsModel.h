@@ -26,7 +26,7 @@ SOFTWARE.
 #include "WobblyTypes.h"
 
 
-class PresetsModel : public QAbstractListModel, private PresetMap {
+class PresetsModel : public QAbstractListModel, public PresetMap {
     Q_OBJECT
 
 public:
@@ -46,6 +46,8 @@ public:
     void insert(const value_type &preset);
 
     void erase(const std::string &preset_name);
+
+    void clear();
 };
 
 #endif // PRESETSMODEL_H

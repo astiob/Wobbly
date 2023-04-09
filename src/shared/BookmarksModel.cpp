@@ -133,3 +133,11 @@ void BookmarksModel::erase(int frame) {
 
     endRemoveRows();
 }
+
+void BookmarksModel::clear() {
+    if (!size()) return;
+
+    beginRemoveRows(QModelIndex(), 0, size() - 1);
+    BookmarkMap::clear();
+    endRemoveRows();
+}

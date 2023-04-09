@@ -26,7 +26,7 @@ SOFTWARE.
 #include "WobblyTypes.h"
 
 
-class SectionsModel : public QAbstractTableModel, private SectionMap {
+class SectionsModel : public QAbstractTableModel, public SectionMap {
     Q_OBJECT
 
 public:
@@ -54,6 +54,8 @@ public:
     void insert(const value_type &section);
 
     void erase(int section_start);
+
+    void clear();
 
     void setSectionPresetName(int section_start, size_t preset_index, const std::string &preset_name);
 

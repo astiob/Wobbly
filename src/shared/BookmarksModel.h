@@ -26,7 +26,7 @@ SOFTWARE.
 #include "WobblyTypes.h"
 
 
-class BookmarksModel : public QAbstractTableModel, private BookmarkMap {
+class BookmarksModel : public QAbstractTableModel, public BookmarkMap {
     Q_OBJECT
 
 public:
@@ -62,6 +62,8 @@ public:
     void insert(const value_type &bookmark);
 
     void erase(int frame);
+
+    void clear();
 };
 
 #endif // BOOKMARKSMODEL_H

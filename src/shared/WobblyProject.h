@@ -81,6 +81,21 @@ static inline uint8_t matchCharToIndexDMetrics(char match) {
     return 255;
 }
 
+struct UndoStep {
+    std::string description;
+
+    std::vector<char> matches;
+    std::vector<std::set<int8_t> > decimated_frames;
+    PatternGuessing pattern_guessing;
+
+    PresetMap presets;
+    CustomListVector custom_lists;
+    std::set<int> combed_frames;
+    FreezeFrameMap frozen_frames;
+    SectionMap sections;
+    BookmarkMap bookmarks;
+};
+
 
 class WobblyProject : public QObject {
     Q_OBJECT
@@ -141,6 +156,10 @@ class WobblyProject : public QObject {
 
         bool is_modified = false;
 
+        std::list<UndoStep> undo_stack;
+        std::list<UndoStep> redo_stack;
+        size_t undo_steps;
+
         // Only functions below.
 
         static bool isValidMatchChar(char match);
@@ -150,6 +169,8 @@ class WobblyProject : public QObject {
         int maybeTranslate(int frame, bool is_end, PositionInFilterChain position) const;
 
         void applyPatternGuessingDecimation(const int section_start, const int section_end, const int first_duplicate, int drop_duplicate);
+
+        void restoreState(UndoStep state);
 
     public:
         WobblyProject(bool _is_wobbly);
@@ -263,6 +284,7 @@ class WobblyProject : public QObject {
 
         std::map<size_t, size_t> getCMatchSequences(int minimum) const;
 
+        void updateOrphanFrames();
         void updateSectionOrphanFrames(int section_start, int section_end);
 
         CombedFramesModel *getCombedFramesModel();
@@ -305,6 +327,16 @@ class WobblyProject : public QObject {
 
         bool isModified() const;
         void setModified(bool modified);
+
+
+        // If these are the empty string, there is no undo/redo action available
+        std::string getUndoDescription();
+        std::string getRedoDescription();
+
+        void commit(std::string description);
+        void undo();
+        void redo();
+        void setUndoSteps(size_t steps);
 
 
         int getZoom() const;

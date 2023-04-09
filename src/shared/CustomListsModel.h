@@ -26,7 +26,7 @@ SOFTWARE.
 #include "WobblyTypes.h"
 
 
-class CustomListsModel : public QAbstractTableModel, private CustomListVector {
+class CustomListsModel : public QAbstractTableModel, public CustomListVector {
     Q_OBJECT
 
     enum Columns {
@@ -60,6 +60,8 @@ public:
     void push_back(const CustomList &cl);
 
     void erase(int list_index);
+
+    void clear();
 
     void moveCustomListUp(int list_index);
 

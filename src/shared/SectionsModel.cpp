@@ -117,6 +117,12 @@ void SectionsModel::erase(int section_start) {
     endRemoveRows();
 }
 
+void SectionsModel::clear() {
+    beginRemoveRows(QModelIndex(), 0, size());
+    SectionMap::clear();
+    endRemoveRows();
+}
+
 
 void SectionsModel::setSectionPresetName(int section_start, size_t preset_index, const std::string &preset_name) {
     SectionMap::iterator it = find(section_start);

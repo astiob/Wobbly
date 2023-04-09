@@ -91,3 +91,11 @@ void PresetsModel::erase(const std::string &preset_name) {
 
     endRemoveRows();
 }
+
+void PresetsModel::clear() {
+    if (!size()) return;
+
+    beginRemoveRows(QModelIndex(), 0, size() - 1);
+    PresetMap::clear();
+    endRemoveRows();
+}

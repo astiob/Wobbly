@@ -26,7 +26,7 @@ SOFTWARE.
 #include <QAbstractListModel>
 
 
-class CombedFramesModel : public QAbstractListModel, private std::set<int> {
+class CombedFramesModel : public QAbstractListModel, public std::set<int> {
     Q_OBJECT
 
 public:
