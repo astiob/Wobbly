@@ -3,8 +3,8 @@ name: Build (Windows / MSYS2)
 on:
   push:
     paths:
-      - 'src/*'
-      - 'rapidjson/*'
+      - 'src/**'
+      - 'rapidjson/**'
       - 'autogen.sh'
       - 'configure.ac'
       - 'Makefile.am'
