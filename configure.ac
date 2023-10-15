@@ -26,9 +26,9 @@ AC_ARG_WITH(
             [AS_HELP_STRING([--with-moc], [Path of the Qt meta object compiler.])],
             [AC_SUBST([MOC], [$with_moc])],
             [
-             AC_PATH_PROGS([MOC], [moc-qt5 moc], [not_found], [$qt_host_bins])
+             AC_PATH_PROGS([MOC], [moc-qt5 moc], [not_found])
              AS_IF(
-                   [test "x$MOC" = "x$not_found"],
+                   [test "x$MOC" = "xnot_found"],
                    [AC_MSG_ERROR(["moc (Qt's meta object compiler) was not found."])]
              )
             ]
