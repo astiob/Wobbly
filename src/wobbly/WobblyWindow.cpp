@@ -38,6 +38,7 @@ SOFTWARE.
 #include <QTabWidget>
 #include <QThread>
 #include <QClipboard>
+#include <QDir>
 
 #include <QFormLayout>
 #include <QHBoxLayout>
@@ -2847,7 +2848,12 @@ void WobblyWindow::createSettingsWindow() {
         if (text == "Old") {
             setStyleSheet("");
         } else {
-            QFile styleSheet(QApplication::applicationDirPath() + "/styles/" + text.toLower().toUtf8().constData() + "/style.qss");
+            QString stylesDir = QApplication::applicationDirPath() + "/styles/";
+
+            QDir::addSearchPath("light_images", stylesDir + "light/rc");
+            QDir::addSearchPath("dark_images", stylesDir + "dark/rc");
+
+            QFile styleSheet(stylesDir + text.toLower().toUtf8().constData() + "/style.qss");
             if(styleSheet.open(QFile::ReadOnly | QFile::Text))
                 setStyleSheet(styleSheet.readAll());
         }
