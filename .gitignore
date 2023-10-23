@@ -40,3 +40,5 @@ configure~
 wibbly.ini
 confdefs.h
 conftest.dir/
+
+build/
