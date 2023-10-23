@@ -1,6 +1,7 @@
 /*
 
 Copyright (c) 2015, John Smith
+Copyright (c) 2023, Setsugen no ao
 
 Permission to use, copy, modify, and/or distribute this software for
 any purpose with or without fee is hereby granted, provided that the
@@ -248,9 +249,10 @@ void WibblyWindow::createMenus() {
 
     connect(helpAbout, &QAction::triggered, [this] () {
         QMessageBox::about(this, QStringLiteral("About Wibbly"), QStringLiteral(
-            "<a href='https://github.com/dubhater/Wobbly'>https://github.com/dubhater/Wobbly</a><br />"
+            "<a href='https://github.com/Setsugennoao/Wobbly'>https://github.com/Setsugennoao/Wobbly</a><br />"
             "<br />"
             "Copyright (c) 2015, John Smith<br />"
+            "Copyright (c) 2023, Setsugen no ao<br />"
             "<br />"
             "Permission to use, copy, modify, and/or distribute this software for "
             "any purpose with or without fee is hereby granted, provided that the "

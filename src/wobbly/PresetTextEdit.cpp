@@ -1,6 +1,7 @@
 /*
 
 Copyright (c) 2015, John Smith
+Copyright (c) 2023, Setsugen no ao
 
 Permission to use, copy, modify, and/or distribute this software for
 any purpose with or without fee is hereby granted, provided that the
