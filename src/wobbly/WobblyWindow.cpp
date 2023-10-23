@@ -3510,6 +3510,8 @@ void WobblyWindow::updateFrameRatesViewer() {
 
     int row_count_before = frame_rates_table->rowCount();
 
+    int verScrollValue = frame_rates_table->verticalScrollBar()->value();
+
     frame_rates_table->setRowCount(0);
 
     auto ranges = project->getDecimationRanges();
@@ -3558,8 +3560,9 @@ void WobblyWindow::updateFrameRatesViewer() {
     if (row_count_before == row_count_after) {
         for (int i = 0; i < selection.size(); i++)
             frame_rates_table->setRangeSelected(selection[i], true);
-    } else if (row_count_after)
-        frame_rates_table->selectRow(0);
+    } else if (row_count_after) {
+        frame_rates_table->verticalScrollBar()->setValue(verScrollValue);
+    }
 }
 
 
