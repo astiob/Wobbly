@@ -1956,8 +1956,8 @@ void WobblyWindow::createFrameRatesViewer() {
     for (int i = 0; i < 5; i++)
         frame_rates_buttons->addButton(new QCheckBox(rates[i] + QStringLiteral(" fps")), i);
 
-    frame_rates_table = new TableWidget(0, 3, this);
-    frame_rates_table->setHorizontalHeaderLabels({ "Start", "End", "Frame rate" });
+    frame_rates_table = new TableWidget(0, 4, this);
+    frame_rates_table->setHorizontalHeaderLabels({ "Start", "End", "Frame rate", "Length" });
 
 
     connect(frame_rates_buttons, static_cast<void (QButtonGroup::*)(int)>(&QButtonGroup::idClicked), [this] () {
@@ -3544,6 +3544,10 @@ void WobblyWindow::updateFrameRatesViewer() {
             item = new QTableWidgetItem(rates[ranges[i].num_dropped]);
             item->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
             frame_rates_table->setItem(rows - 1, 2, item);
+
+            item = new QTableWidgetItem(QString::number(end - ranges[i].start + 1));
+            item->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
+            frame_rates_table->setItem(rows - 1, 3, item);
         }
     }
 
