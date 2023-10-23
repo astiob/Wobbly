@@ -1937,11 +1937,17 @@ void WobblyProject::setMatch(int frame, char match) {
     if (!isValidMatchChar(match))
         throw WobblyException("Can't set the match for frame " + std::to_string(frame) + ": '" + match + "' is not a valid match character.");
 
-    if (frame == 0 && (match == 'b' || match == 'p'))
-        match = 'c';
-
-    if (frame == getNumFrames(PostSource) - 1 && (match == 'n' || match == 'u'))
-        match = 'c';
+    if (frame == 0) {
+        if (match == 'b')
+            match = 'n';
+        else if (match == 'p')
+            match = 'u';
+    } else if (frame == getNumFrames(PostSource) - 1) {
+        if (match == 'n')
+            match = 'b';
+        else if (match == 'u')
+            match = 'p';
+    }
 
     if (!matches.size())
         matches.resize(getNumFrames(PostSource), 'c');
