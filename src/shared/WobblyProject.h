@@ -120,8 +120,14 @@ class WobblyProject : public QObject {
 
         std::string input_file;
         std::map<int, FrameRange> trims; // Key is FrameRange::first
-        std::map<std::string, double> vfm_parameters;
-        std::map<std::string, double> vdecimate_parameters;
+
+        std::map<std::string, int> vfm_parameters_int;
+        std::map<std::string, double> vfm_parameters_double;
+        std::map<std::string, bool> vfm_parameters_bool;
+
+        std::map<std::string, int> vdecimate_parameters_int;
+        std::map<std::string, double> vdecimate_parameters_double;
+        std::map<std::string, bool> vdecimate_parameters_bool;
 
         std::vector<std::array<int16_t, 5> > mics;
         std::vector<std::array<int32_t, 2> > mmetrics;
@@ -202,8 +208,13 @@ class WobblyProject : public QObject {
         void addTrim(int trim_start, int trim_end);
 
 
+        void setVFMParameter(const std::string &name, int value);
         void setVFMParameter(const std::string &name, double value);
+        void setVFMParameter(const std::string &name, bool value);
+
+        void setVDecimateParameter(const std::string &name, int value);
         void setVDecimateParameter(const std::string &name, double value);
+        void setVDecimateParameter(const std::string &name, bool value);
 
         std::array<int32_t, 3> getMMetrics(int frame) const;
         std::array<int32_t, 3> getVMetrics(int frame) const;

@@ -29,6 +29,11 @@ SOFTWARE.
 
 #include "FrameRangesModel.h"
 
+enum JSONParameterTypes {
+    JSONParamInt,
+    JSONParamDouble,
+    JSONParamBool
+};
 
 struct FreezeFrame {
     int first;

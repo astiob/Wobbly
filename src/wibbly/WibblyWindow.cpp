@@ -1386,7 +1386,7 @@ void WibblyWindow::startNextJob() {
             } else if (vfm_params[i].type == VIVTCParamDouble) {
                 current_project->setVFMParameter(vfm_params[i].name.toStdString(), job.getVFMParameterDouble(vfm_params[i].name.toStdString()));
             } else if (vfm_params[i].type == VIVTCParamBool) {
-                current_project->setVFMParameter(vfm_params[i].name.toStdString(), (int)job.getVFMParameterBool(vfm_params[i].name.toStdString()));
+                current_project->setVFMParameter(vfm_params[i].name.toStdString(), job.getVFMParameterBool(vfm_params[i].name.toStdString()));
             }
         }
     }
@@ -1398,7 +1398,7 @@ void WibblyWindow::startNextJob() {
             } else if (vdecimate_params[i].type == VIVTCParamDouble) {
                 current_project->setVDecimateParameter(vdecimate_params[i].name.toStdString(), job.getVDecimateParameterDouble(vdecimate_params[i].name.toStdString()));
             } else if (vdecimate_params[i].type == VIVTCParamBool) {
-                current_project->setVDecimateParameter(vdecimate_params[i].name.toStdString(), (int)job.getVDecimateParameterBool(vdecimate_params[i].name.toStdString()));
+                current_project->setVDecimateParameter(vdecimate_params[i].name.toStdString(), job.getVDecimateParameterBool(vdecimate_params[i].name.toStdString()));
             }
         }
     }

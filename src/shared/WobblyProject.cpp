@@ -41,7 +41,7 @@ SOFTWARE.
 #include "WobblyProject.h"
 
 
-#define PROJECT_FORMAT_VERSION 2
+#define PROJECT_FORMAT_VERSION 3
 
 
 namespace Keys {
@@ -187,7 +187,7 @@ WobblyProject::WobblyProject(bool _is_wobbly, const std::string &_input_file, co
     setNumFrames(PostDecimate, _num_frames);
 
     // XXX What happens when the video happens to be bottom field first?
-    vfm_parameters.insert({ "order", 1 });
+    vfm_parameters_int.insert({ "order", 1 });
     decimated_frames.resize((_num_frames - 1) / 5 + 1);
     addSection(0);
     resize.width = _width;
@@ -358,7 +358,13 @@ void WobblyProject::writeProject(const std::string &path, bool compact_project) 
     // FIXME, should probably save/load the DMetrics parameters here as well
     rj::Value json_vfm_parameters(rj::kObjectType);
 
-    for (auto it = vfm_parameters.cbegin(); it != vfm_parameters.cend(); it++)
+    for (auto it = vfm_parameters_int.cbegin(); it != vfm_parameters_int.cend(); it++)
+        json_vfm_parameters.AddMember(rj::Value(it->first, a), rj::Value(it->second), a);
+
+    for (auto it = vfm_parameters_double.cbegin(); it != vfm_parameters_double.cend(); it++)
+        json_vfm_parameters.AddMember(rj::Value(it->first, a), rj::Value(it->second), a);
+
+    for (auto it = vfm_parameters_bool.cbegin(); it != vfm_parameters_bool.cend(); it++)
         json_vfm_parameters.AddMember(rj::Value(it->first, a), rj::Value(it->second), a);
 
     json_project.AddMember(Keys::vfm_parameters, json_vfm_parameters, a);
@@ -366,7 +372,13 @@ void WobblyProject::writeProject(const std::string &path, bool compact_project) 
 
     rj::Value json_vdecimate_parameters(rj::kObjectType);
 
-    for (auto it = vdecimate_parameters.cbegin(); it != vdecimate_parameters.cend(); it++)
+    for (auto it = vdecimate_parameters_int.cbegin(); it != vdecimate_parameters_int.cend(); it++)
+        json_vdecimate_parameters.AddMember(rj::Value(it->first, a), rj::Value(it->second), a);
+
+    for (auto it = vdecimate_parameters_double.cbegin(); it != vdecimate_parameters_double.cend(); it++)
+        json_vdecimate_parameters.AddMember(rj::Value(it->first, a), rj::Value(it->second), a);
+
+    for (auto it = vdecimate_parameters_bool.cbegin(); it != vdecimate_parameters_bool.cend(); it++)
         json_vdecimate_parameters.AddMember(rj::Value(it->first, a), rj::Value(it->second), a);
 
     json_project.AddMember(Keys::vdecimate_parameters, json_vdecimate_parameters, a);
@@ -926,30 +938,50 @@ void WobblyProject::readProject(const std::string &path) {
     if (it != json_project.MemberEnd()) {
         CHECK_OBJECT;
 
-        std::vector<std::string> valid_parameters = {
-            Keys::VFMParameters::blockx,
-            Keys::VFMParameters::blocky,
-            Keys::VFMParameters::chroma,
-            Keys::VFMParameters::cthresh,
-            Keys::VFMParameters::mchroma,
-            Keys::VFMParameters::mi,
-            Keys::VFMParameters::micmatch,
-            Keys::VFMParameters::order,
-            Keys::VFMParameters::scthresh,
-            Keys::VFMParameters::y0,
-            Keys::VFMParameters::y1
+        std::vector<std::pair<std::string, JSONParameterTypes>> valid_parameters = {
+            {Keys::VFMParameters::order, JSONParamInt},
+            {Keys::VFMParameters::cthresh, JSONParamInt},
+            {Keys::VFMParameters::mi, JSONParamInt},
+            {Keys::VFMParameters::blockx, JSONParamInt},
+            {Keys::VFMParameters::blocky, JSONParamInt},
+            {Keys::VFMParameters::y0, JSONParamInt},
+            {Keys::VFMParameters::y1, JSONParamInt},
+            {Keys::VFMParameters::micmatch, JSONParamInt},
+            {Keys::VFMParameters::scthresh, JSONParamDouble},
+            {Keys::VFMParameters::chroma, JSONParamBool},
+            {Keys::VFMParameters::mchroma, JSONParamBool},
         };
 
         const rj::Value &json_vfm_parameters = it->value;
 
         for (size_t i = 0; i < valid_parameters.size(); i++) {
-            it = json_vfm_parameters.FindMember(valid_parameters[i]);
+            it = json_vfm_parameters.FindMember(valid_parameters[i].first);
 
             if (it != json_vfm_parameters.MemberEnd()) {
-                if (!it->value.IsNumber())
-                    throw WobblyException(path + ": JSON key '" + valid_parameters[i] + "', member of '" + Keys::vfm_parameters + "', must be a number.");
+                if (project_format_version == 2) {
+                    if (!it->value.IsNumber()) {
+                        throw WobblyException(path + ": JSON key '" + valid_parameters[i].first + "', member of '" + Keys::vfm_parameters + "', must be a number.");
+                    }
 
-                vfm_parameters.insert({ valid_parameters[i], it->value.GetDouble() });
+                    if (valid_parameters[i].second == JSONParamBool) {
+                        vfm_parameters_bool.insert({ valid_parameters[i].first, !!it->value.GetDouble() });
+                    } else if (valid_parameters[i].second == JSONParamInt) {
+                        vfm_parameters_int.insert({ valid_parameters[i].first, (int)it->value.GetDouble() });
+                    } else if (valid_parameters[i].second == JSONParamDouble) {
+                        vfm_parameters_double.insert({ valid_parameters[i].first, it->value.GetDouble() });
+                    }
+                } else {
+                    if (valid_parameters[i].second == JSONParamBool && it->value.IsBool()) {
+                        vfm_parameters_bool.insert({ valid_parameters[i].first, it->value.GetBool() });
+                    } else if (valid_parameters[i].second == JSONParamInt && it->value.IsInt()) {
+                        vfm_parameters_int.insert({ valid_parameters[i].first, it->value.GetInt64() });
+                    } else if (valid_parameters[i].second == JSONParamDouble && it->value.IsDouble()) {
+                        vfm_parameters_double.insert({ valid_parameters[i].first, it->value.GetDouble() });
+                    } else {
+                        std::string correct_type{valid_parameters[i].second == JSONParamBool ? "boolean" : valid_parameters[i].second == JSONParamInt ? "integer" : "double"};
+                        throw WobblyException(path + ": JSON key '" + valid_parameters[i].first + "', member of '" + Keys::vfm_parameters + "', must be a " + correct_type +".");
+                    }
+                }
             }
         }
     }
@@ -958,24 +990,44 @@ void WobblyProject::readProject(const std::string &path) {
     if (it != json_project.MemberEnd()) {
         CHECK_OBJECT;
 
-        std::vector<std::string> valid_parameters = {
-            Keys::VDecimateParameters::blockx,
-            Keys::VDecimateParameters::blocky,
-            Keys::VDecimateParameters::chroma,
-            Keys::VDecimateParameters::dupthresh,
-            Keys::VDecimateParameters::scthresh
+        std::vector<std::pair<std::string, JSONParameterTypes>> valid_parameters = {
+            {Keys::VDecimateParameters::blockx, JSONParamInt},
+            {Keys::VDecimateParameters::blocky, JSONParamInt},
+            {Keys::VDecimateParameters::dupthresh, JSONParamDouble},
+            {Keys::VDecimateParameters::scthresh, JSONParamDouble},
+            {Keys::VDecimateParameters::chroma, JSONParamBool},
         };
 
         const rj::Value &json_vdecimate_parameters = it->value;
 
         for (size_t i = 0; i < valid_parameters.size(); i++) {
-            it = json_vdecimate_parameters.FindMember(valid_parameters[i]);
+            it = json_vdecimate_parameters.FindMember(valid_parameters[i].first);
 
             if (it != json_vdecimate_parameters.MemberEnd()) {
-                if (!it->value.IsNumber())
-                    throw WobblyException(path + ": JSON key '" + valid_parameters[i] + "', member of '" + Keys::vdecimate_parameters + "', must be a number.");
+                if (project_format_version == 2) {
+                    if (!it->value.IsNumber()) {
+                        throw WobblyException(path + ": JSON key '" + valid_parameters[i].first + "', member of '" + Keys::vdecimate_parameters + "', must be a number.");
+                    }
 
-                vdecimate_parameters.insert({ valid_parameters[i], it->value.GetDouble() });
+                    if (valid_parameters[i].second == JSONParamBool) {
+                        vdecimate_parameters_bool.insert({ valid_parameters[i].first, !!it->value.GetDouble() });
+                    } else if (valid_parameters[i].second == JSONParamInt) {
+                        vdecimate_parameters_int.insert({ valid_parameters[i].first, (int)it->value.GetDouble() });
+                    } else if (valid_parameters[i].second == JSONParamDouble) {
+                        vdecimate_parameters_double.insert({ valid_parameters[i].first, it->value.GetDouble() });
+                    }
+                } else {
+                    if (valid_parameters[i].second == JSONParamBool && it->value.IsBool()) {
+                        vdecimate_parameters_bool.insert({ valid_parameters[i].first, it->value.GetBool() });
+                    } else if (valid_parameters[i].second == JSONParamInt && it->value.IsInt()) {
+                        vdecimate_parameters_int.insert({ valid_parameters[i].first, it->value.GetInt64() });
+                    } else if (valid_parameters[i].second == JSONParamDouble && it->value.IsDouble()) {
+                        vdecimate_parameters_double.insert({ valid_parameters[i].first, it->value.GetDouble() });
+                    } else {
+                        std::string correct_type{valid_parameters[i].second == JSONParamBool ? "boolean" : valid_parameters[i].second == JSONParamInt ? "integer" : "double"};
+                        throw WobblyException(path + ": JSON key '" + valid_parameters[i].first + "', member of '" + Keys::vdecimate_parameters + "', must be a " + correct_type +".");
+                    }
+                }
             }
         }
     }
@@ -1650,13 +1702,33 @@ void WobblyProject::addTrim(int trim_start, int trim_end) {
 }
 
 
+void WobblyProject::setVFMParameter(const std::string &name, int value) {
+    vfm_parameters_int[name] = value;
+}
+
+
 void WobblyProject::setVFMParameter(const std::string &name, double value) {
-    vfm_parameters[name] = value;
+    vfm_parameters_double[name] = value;
+}
+
+
+void WobblyProject::setVFMParameter(const std::string &name, bool value) {
+    vfm_parameters_bool[name] = value;
+}
+
+
+void WobblyProject::setVDecimateParameter(const std::string &name, int value) {
+    vdecimate_parameters_int[name] = value;
 }
 
 
 void WobblyProject::setVDecimateParameter(const std::string &name, double value) {
-    vdecimate_parameters[name] = value;
+    vdecimate_parameters_double[name] = value;
+}
+
+
+void WobblyProject::setVDecimateParameter(const std::string &name, bool value) {
+    vdecimate_parameters_bool[name] = value;
 }
 
 
@@ -4107,7 +4179,7 @@ void WobblyProject::fieldHintToScript(std::string &script) const {
         return;
 
     script += "src = c.fh.FieldHint(clip=src, tff=";
-    script += std::to_string((int)vfm_parameters.at("order"));
+    script += std::to_string(vfm_parameters_int.at("order"));
     script += ", matches='";
     if (matches.size())
         script.append(matches.data(), matches.size());
