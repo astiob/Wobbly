@@ -4,6 +4,8 @@
       "name": "Win32",
       "includePath": [
         "${default}",
+        "${workspaceFolder}",
+        "${workspaceFolder}/src",
         "${workspaceFolder}/src/shared",
         "C:/msys64/mingw64/include/Qt",
         "C:/msys64/mingw64/include/Qt/QtVulkanSupport",
