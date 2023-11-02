@@ -1,0 +1,41 @@
+{
+  "configurations": [
+    {
+      "name": "Win32",
+      "includePath": [
+        "${default}",
+        "${workspaceFolder}/src/shared",
+        "C:/msys64/mingw64/include/Qt",
+        "C:/msys64/mingw64/include/Qt/QtVulkanSupport",
+        "C:/msys64/mingw64/include/Qt/QtWidgets",
+        "C:/msys64/mingw64/include/Qt/QtWindowsUIAutomationSupport",
+        "C:/msys64/mingw64/include/Qt/QtXml",
+        "C:/msys64/mingw64/include/Qt/QtAccessibilitySupport",
+        "C:/msys64/mingw64/include/Qt/QtConcurrent",
+        "C:/msys64/mingw64/include/Qt/QtCore",
+        "C:/msys64/mingw64/include/Qt/QtDBus",
+        "C:/msys64/mingw64/include/Qt/QtDeviceDiscoverySupport",
+        "C:/msys64/mingw64/include/Qt/QtEdidSupport",
+        "C:/msys64/mingw64/include/Qt/QtEventDispatcherSupport",
+        "C:/msys64/mingw64/include/Qt/QtFbSupport",
+        "C:/msys64/mingw64/include/Qt/QtFontDatabaseSupport",
+        "C:/msys64/mingw64/include/Qt/QtGui",
+        "C:/msys64/mingw64/include/Qt/QtNetwork",
+        "C:/msys64/mingw64/include/Qt/QtOpenGL",
+        "C:/msys64/mingw64/include/Qt/QtOpenGLExtensions",
+        "C:/msys64/mingw64/include/Qt/QtPlatformCompositorSupport",
+        "C:/msys64/mingw64/include/Qt/QtPlatformHeaders",
+        "C:/msys64/mingw64/include/Qt/QtPrintSupport",
+        "C:/msys64/mingw64/include/Qt/QtSql",
+        "C:/msys64/mingw64/include/Qt/QtTest",
+        "C:/msys64/mingw64/include/Qt/QtThemeSupport",
+        "E:/Cache/Repositories/vapoursynth/include"
+      ],
+      "defines": ["_DEBUG", "UNICODE", "_UNICODE"],
+      "windowsSdkVersion": "10.0.22000.0",
+      "cStandard": "c17",
+      "intelliSenseMode": "windows-msvc-x64"
+    }
+  ],
+  "version": 4
+}
