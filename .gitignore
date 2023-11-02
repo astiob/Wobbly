@@ -8,10 +8,10 @@
 *.wob
 *.exe
 *.ini
+moc_*.cpp
 
 .deps
 .dirstamp
-.moc
 .libs
 
 build/
