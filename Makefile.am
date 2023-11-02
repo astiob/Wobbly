@@ -1,8 +1,8 @@
 warningflags = -Wall -Wextra -Wshadow
 includeflags = -I$(srcdir) -I$(srcdir)/src/shared
 commoncflags = $(FPIC) -O2 $(warningflags) $(includeflags)
-AM_CXXFLAGS = -std=c++11 $(commoncflags)
-AM_CFLAGS = -std=c99 $(commoncflags)
+AM_CXXFLAGS = -std=c++23 $(commoncflags)
+AM_CFLAGS = -std=c23 $(commoncflags)
 AM_CPPFLAGS = $(QT5PLATFORMSUPPORT_CFLAGS) $(QT5WIDGETS_CFLAGS) $(VSSCRIPT_CFLAGS)
 AM_LDFLAGS = $(WINDOWS_SUBSYSTEM)
 
