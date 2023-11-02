@@ -752,8 +752,8 @@ void WibblyWindow::createCropWindow() {
 
             jobs[row].setCrop(crop_spin[0]->value(), crop_spin[1]->value(), crop_spin[2]->value(), crop_spin[3]->value());
 
-            for (int i = 0; i < 4; i++)
-                settings_last_crop[i] = crop_spin[i]->value();
+            for (int j = 0; j < 4; j++)
+                settings_last_crop[j] = crop_spin[j]->value();
 
             QList<QVariant> crop_list = { crop_spin[0]->value(), crop_spin[1]->value(), crop_spin[2]->value(), crop_spin[3]->value() };
             settings.setValue(KEY_LAST_CROP, crop_list);

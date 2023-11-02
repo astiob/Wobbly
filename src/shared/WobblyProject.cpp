@@ -1737,7 +1737,7 @@ std::array<int32_t, 3> WobblyProject::getMMetrics(int frame) const {
     if (frame < 0 || frame >= getNumFrames(PostSource))
         throw WobblyException("Can't get the mmetrics for frame " + std::to_string(frame) + ": frame number out of range.");
 
-    if (mmetrics.size() && frame < mmetrics.size() - 1)
+    if (mmetrics.size() && frame < (int)mmetrics.size() - 1)
         return { mmetrics[frame][0], mmetrics[frame][1], mmetrics[frame + 1][0] };
     if (mmetrics.size())
         return { mmetrics[frame][0], mmetrics[frame][1], mmetrics[frame][1] };
@@ -1750,7 +1750,7 @@ std::array<int32_t, 3>WobblyProject::getVMetrics(int frame) const {
     if (frame < 0 || frame >= getNumFrames(PostSource))
         throw WobblyException("Can't get the vmetrics for frame " + std::to_string(frame) + ": frame number out of range.");
 
-    if (vmetrics.size() && frame < vmetrics.size() - 1)
+    if (vmetrics.size() && frame < (int)vmetrics.size() - 1)
         return { vmetrics[frame][0], vmetrics[frame][1], vmetrics[frame + 1][0] };
     if (vmetrics.size())
         return { vmetrics[frame][0], vmetrics[frame][1], vmetrics[frame][1] };

@@ -57,28 +57,34 @@ SOFTWARE.
 static inline uint8_t matchCharToIndex(char match) {
     if (match == 'p')
         return 0;
+
     if (match == 'c')
         return 1;
+
     if (match == 'n')
         return 2;
+
     if (match == 'b')
         return 3;
+
     if (match == 'u')
         return 4;
 
-    return 255;
+    return 0; // never reaches this
 }
 
 
 static inline uint8_t matchCharToIndexDMetrics(char match) {
     if (match == 'c')
         return 1;
+
     if (match == 'n')
         return 2;
+
     if (match == 'b')
         return 0;
 
-    return 255;
+    return 0; // never reaches this
 }
 
 struct UndoStep {

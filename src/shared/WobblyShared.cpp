@@ -31,13 +31,14 @@ struct PluginDetectionInfo {
 
 static PluginDetectionInfo requiredPlugins[] = {
     {"VIVTC", "org.ivtc.v", "VFM", "VDecimate"},
-    {"DMetrics", "com.vapoursynth.dmetrics", "DMetrics"},
-    {"SCXVID", "com.nodame.scxvid", "Scxvid"},
-    {"FieldHint", "com.nodame.fieldhint", "FieldHint"},
-    {"TDeintMod", "com.holywu.tdeintmod", "IsCombed"},
-    {"d2vsource", "com.sources.d2vsource", "Source"},
+    {"DMetrics", "com.vapoursynth.dmetrics", "DMetrics", nullptr},
+    {"SCXVID", "com.nodame.scxvid", "Scxvid", nullptr},
+    {"FieldHint", "com.nodame.fieldhint", "FieldHint", nullptr},
+    {"TDeintMod", "com.holywu.tdeintmod", "IsCombed", nullptr},
+    {"d2vsource", "com.sources.d2vsource", "Source", nullptr},
     {"L-SMASH-Works", "systems.innocent.lsmas", "LibavSMASHSource", "LWLibavSource"},
-    {"DGDecNV", "com.vapoursynth.dgdecodenv", "DGSource"} };
+    {"DGDecNV", "com.vapoursynth.dgdecodenv", "DGSource", nullptr}
+};
 
 static FilterState checkIfFiltersExists(const VSAPI *vsapi, VSCore *vscore, const char *id, const char *function_name1, const char *function_name2) {
     VSPlugin *plugin = vsapi->getPluginByID(id, vscore);
