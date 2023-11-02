@@ -81,5 +81,33 @@
     "xutility": "cpp",
     "qbuttongroup": "cpp",
     "qapplication": "cpp"
+  },
+  "files.exclude": {
+    "**/.git": true,
+    "**/.svn": true,
+    "**/.hg": true,
+    "**/CVS": true,
+    "**/.DS_Store": true,
+    "**/Thumbs.db": true,
+    "**/moc_*": true,
+    "**/*.o": true,
+    "**/.deps": true,
+    "**/.dirstamp": true,
+    "autom4te.cache": true,
+    "rapidjson": true,
+    "Makefile": true,
+    "Makefile.in": true,
+    "aclocal.m4": true,
+    "compile": true,
+    "config.guess": true,
+    "config.log": true,
+    "config.status": true,
+    "config.sub": true,
+    "configure": true,
+    "depcomp": true,
+    "install-sh": true,
+    "libtool": true,
+    "ltmain.sh": true,
+    "missing": true
   }
 }
