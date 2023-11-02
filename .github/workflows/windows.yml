@@ -34,7 +34,7 @@ jobs:
 
     - name: Download VapourSynth
       run: |
-        curl -o vs.7z -L https://github.com/vapoursynth/vapoursynth/releases/download/R62/VapourSynth64-Portable-R62.7z
+        curl -o vs.7z -L https://github.com/vapoursynth/vapoursynth/releases/download/R65/VapourSynth64-Portable-R65.7z
         7z x -ovapoursynth vs.7z
 
     - name: Configure and build
