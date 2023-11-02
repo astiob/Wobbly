@@ -8,7 +8,7 @@ moc_*.cpp
 Makefile
 Makefile.in
 aclocal.m4
-autom4te.cache
+*.cache
 compile
 config.guess
 config.log
@@ -29,13 +29,9 @@ WibblyWobbly.files
 WibblyWobbly.includes
 releases/
 *.html
-*.json
-wibbly
-wobbly
-.vscode
-wibbly.exe
-wobbly.exe
-wobbly.ini*
+*.wob
+*.exe
+*.ini
 configure~
 wibbly.ini
 confdefs.h
