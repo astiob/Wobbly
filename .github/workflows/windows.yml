@@ -40,7 +40,7 @@ jobs:
     - name: Configure and build
       run: |
         ./autogen.sh
-        VSSCRIPT_CFLAGS="-I vapoursynth/sdk/include/" VSSCRIPT_LIBS="-L vapoursynth/ -l:vsscript.dll" ./configure
+        VSSCRIPT_CFLAGS="-I vapoursynth/sdk/include/" VSSCRIPT_LIBS="-L vapoursynth/" ./configure
         make -j$(nproc)
 
     - name: Package

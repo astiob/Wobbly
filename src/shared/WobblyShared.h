@@ -25,12 +25,22 @@ SOFTWARE.
 #include <string>
 #include <cstdint>
 
+#include <VSScript4.h>
 #include <VapourSynth4.h>
 
-enum class FilterState { MissingPlugin, MissingFilter, Exists };
+enum class FilterState
+{
+    MissingPlugin,
+    MissingFilter,
+    Exists
+};
+
+typedef const VSSCRIPTAPI *(VS_CC *GetVSScriptAPIFunc)(int version)VS_NOEXCEPT;
 
 std::map<std::string, FilterState> getRequiredFilterStates(const VSAPI *vsapi, VSCore *vscore);
 
 uint8_t *packRGBFrame(const VSAPI *vsapi, const VSFrame *frame);
+
+GetVSScriptAPIFunc fetchVSScript();
 
 #endif // WOBBLYSHARED_H

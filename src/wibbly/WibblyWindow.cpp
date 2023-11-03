@@ -143,7 +143,12 @@ void WibblyWindow::vsLogPopup(int msgType, const QString &msg) {
 
 
 void WibblyWindow::initialiseVapourSynth() {
-    vssapi = getVSScriptAPI(VSSCRIPT_API_VERSION);
+    GetVSScriptAPIFunc newVSScriptAPI = fetchVSScript();
+
+    std::string oldlocale(setlocale(LC_ALL, NULL));
+    vssapi = newVSScriptAPI(VSSCRIPT_API_VERSION);
+    setlocale(LC_ALL, oldlocale.c_str());
+
     if (!vssapi)
         throw WobblyException("Fatal error: failed to initialise VSScript. Your VapourSynth installation is probably broken. Python probably couldn't 'import vapoursynth'.");
 

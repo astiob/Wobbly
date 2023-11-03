@@ -45,8 +45,6 @@ SOFTWARE.
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 
-#include <VSScript4.h>
-
 #include "CombedFramesCollector.h"
 #include "ProgressDialog.h"
 #include "RandomStuff.h"
@@ -54,6 +52,8 @@ SOFTWARE.
 #include "WobblyException.h"
 #include "WobblyWindow.h"
 #include "WobblyShared.h"
+
+#include "string"
 
 
 // To avoid duplicating the string literals passed to QSettings
@@ -3303,7 +3303,12 @@ void WobblyWindow::vsLogPopup(int msgType, const QString &msg) {
 
 
 void WobblyWindow::initialiseVapourSynth() {
-    vssapi = getVSScriptAPI(VSSCRIPT_API_VERSION);
+    GetVSScriptAPIFunc newVSScriptAPI = fetchVSScript();
+
+    std::string oldlocale(setlocale(LC_ALL, NULL));
+    vssapi = newVSScriptAPI(VSSCRIPT_API_VERSION);
+    setlocale(LC_ALL, oldlocale.c_str());
+
     if (!vssapi)
         throw WobblyException("Fatal error: failed to initialise VSScript. Your VapourSynth installation is probably broken. Python probably couldn't 'import vapoursynth'.");
        

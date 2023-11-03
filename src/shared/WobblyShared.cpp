@@ -19,8 +19,36 @@ SOFTWARE.
 
 
 #include "WobblyShared.h"
+#include "WobblyException.h"
 
 #include <cstdlib>
+#include <vector>
+
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <dlfcn.h>
+#endif
+
+#ifdef _WIN32
+#define VSSCRIPT_SO "vsscript.dll"
+#else
+#ifdef __APPLE__
+#define VSSCRIPT_SO "libvapoursynth-script.dylib"
+#define DLOPEN_FLAGS RTLD_LAZY | RTLD_GLOBAL
+#else
+#define VSSCRIPT_SO "libvapoursynth-script.so"
+#define DLOPEN_FLAGS RTLD_LAZY | RTLD_GLOBAL | RTLD_DEEPBIND
+#endif
+#endif
+
+namespace {
+#ifdef _WIN32
+	HINSTANCE hLib = nullptr;
+#else
+	void* hLib = nullptr;
+#endif
+}
 
 struct PluginDetectionInfo {
     const char *nice_name;
@@ -83,4 +111,57 @@ uint8_t *packRGBFrame(const VSAPI *vsapi, const VSFrame *frame) {
     }
 
     return frame_data;
+}
+
+GetVSScriptAPIFunc fetchVSScript() {
+
+#ifdef _WIN32
+    std::wstring vsscriptDLLpath{L""};
+
+    HKEY hKey;
+    LONG lRes = RegOpenKeyEx(HKEY_CURRENT_USER, L"Software\\VapourSynth", 0, KEY_READ, &hKey);
+
+    if (lRes != ERROR_SUCCESS) {
+        lRes = RegOpenKeyEx(HKEY_LOCAL_MACHINE, L"Software\\VapourSynth", 0, KEY_READ, &hKey);
+    }
+
+    if (lRes == ERROR_SUCCESS) {
+        WCHAR szBuffer[512];
+        DWORD dwBufferSize = sizeof(szBuffer);
+        ULONG nError;
+
+        nError = RegQueryValueEx(hKey, L"VSScriptDLL", 0, nullptr, (LPBYTE)szBuffer, &dwBufferSize);
+        RegCloseKey(hKey);
+
+        if (ERROR_SUCCESS == nError) 
+            vsscriptDLLpath = szBuffer;
+    }
+
+    if (vsscriptDLLpath.length()) {
+        hLib = LoadLibraryW(vsscriptDLLpath.c_str());
+    }
+    
+    if (!hLib) {
+#define CONCATENATE(x, y) x ## y
+#define _Lstr(x) CONCATENATE(L, x)
+	    hLib = LoadLibraryW(_Lstr(VSSCRIPT_SO));
+#undef _Lstr
+#undef CONCATENATE
+    }
+#else
+	hLib = dlopen(VSSCRIPT_SO, DLOPEN_FLAGS);
+#endif
+
+	if (!hLib)
+		throw WobblyException("Could not load " VSSCRIPT_SO ". Make sure VapourSynth is installed correctly.");
+
+#ifdef _WIN32
+	GetVSScriptAPIFunc _getVSScriptAPI = (GetVSScriptAPIFunc)(void *)GetProcAddress(hLib, "getVSScriptAPI");
+#else
+	GetVSScriptAPIFunc _getVSScriptAPI = (GetVSScriptAPIFunc)(void *)dlsym(hLib, "getVSScriptAPI");
+#endif
+	if (!_getVSScriptAPI)
+		throw WobblyException("Failed to get address of getVSScriptAPI from " VSSCRIPT_SO);
+
+	return _getVSScriptAPI;
 }
