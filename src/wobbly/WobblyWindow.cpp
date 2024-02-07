@@ -1019,7 +1019,7 @@ void WobblyWindow::createPatternEditor() {
     match_pattern_edit = new QLineEdit(match_pattern);
     decimation_pattern_edit = new QLineEdit(decimation_pattern);
 
-    QRegExpValidator *match_validator = new QRegExpValidator(QRegExp("[pcn]{5,}"), this);
+    QRegExpValidator *match_validator = new QRegExpValidator(QRegExp("[pbcnu]{5,}"), this);
     QRegExpValidator *decimation_validator = new QRegExpValidator(QRegExp("[dk]{5,}"), this);
 
     match_pattern_edit->setValidator(match_validator);
