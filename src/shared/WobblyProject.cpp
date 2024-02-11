@@ -3059,10 +3059,7 @@ void WobblyProject::setCMatchSequencesMinimum(int minimum) {
 }
 
 
-std::string WobblyProject::frameToTime(int frame) const {
-    if (frame < 0 || frame >= getNumFrames(PostSource))
-        throw WobblyException("Can't convert frame " + std::to_string(frame) + " to a time: frame number out of range.");
-
+std::string frameToTime(int frame, int64_t fps_num, int64_t fps_den) {
     int milliseconds = (int)((frame * fps_den * 1000 / fps_num) % 1000);
     int seconds_total = (int)(frame * fps_den / fps_num);
     int seconds = seconds_total % 60;
@@ -3079,6 +3076,22 @@ std::string WobblyProject::frameToTime(int frame) const {
     time[15] = '\0';
 
     return std::string(time);
+}
+
+
+std::string WobblyProject::frameToTime(int frame) const {
+    if (frame < 0 || frame >= getNumFrames(PostSource))
+        throw WobblyException("Can't convert frame " + std::to_string(frame) + " to a time: frame number out of range.");
+
+    return ::frameToTime(frame, fps_num, fps_den);
+}
+
+
+std::string WobblyProject::frameToTimeAfterDecimation(int frame) const {
+    if (frame < 0 || frame >= getNumFrames(PostSource))
+        throw WobblyException("Can't convert frame " + std::to_string(frame) + " to a time: frame number out of range.");
+
+    return ::frameToTime(frameNumberAfterDecimation(frame), fps_num * 4, fps_den * 5);
 }
 
 
