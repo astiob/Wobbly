@@ -396,6 +396,7 @@ class WobblyProject : public QObject {
 
 
         std::string frameToTime(int frame) const;
+        std::string frameToTimeAfterDecimation(int frame) const;
 
 
         int frameNumberAfterDecimation(int frame) const;

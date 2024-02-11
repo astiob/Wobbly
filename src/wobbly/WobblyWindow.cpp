@@ -4690,7 +4690,27 @@ void WobblyWindow::updateFrameDetails() {
     frame_num_label->setText(frame);
 
 
-    time_label->setText(QString::fromStdString("Time: " + project->frameToTime(current_frame)));
+    QString time("Time: ");
+
+    if (!preview)
+        time += "<b>";
+
+    time += QString::fromStdString(project->frameToTime(current_frame));
+
+    if (!preview)
+        time += "</b>";
+
+    time += " | ";
+
+    if (preview)
+        time += "<b>";
+
+    time += QString::fromStdString(project->frameToTimeAfterDecimation(current_frame));
+
+    if (preview)
+        time += "</b>";
+
+    time_label->setText(time);
 
 
     int matches_start = std::max(0, current_frame - 10);
