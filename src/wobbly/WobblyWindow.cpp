@@ -4759,6 +4759,7 @@ void WobblyWindow::updateFrameDetails() {
     const Section *current_section = project->findSection(current_frame);
     int section_start = current_section->start;
     int section_end = project->getSectionEnd(section_start) - 1;
+    int section_length = section_end - section_start + 1;
 
     QString presets;
     for (auto it = current_section->presets.cbegin(); it != current_section->presets.cend(); it++) {
@@ -4770,7 +4771,11 @@ void WobblyWindow::updateFrameDetails() {
     if (presets.isNull())
         presets = "&lt;none&gt;";
 
-    section_label->setText(QStringLiteral("Section: [%1,%2]<br />Presets:<br />%3").arg(section_start).arg(section_end).arg(presets));
+    int section_length_after_decimation = project->frameNumberAfterDecimation(section_end + 1) - project->frameNumberAfterDecimation(section_start);
+    if (section_end + 1 == project->getNumFrames(PostSource) - 1 && project->isDecimatedFrame(section_end + 1))
+        section_length_after_decimation++;
+
+    section_label->setText(QStringLiteral("Section: [%1,%2] = %3 | %4<br />Presets:<br />%5").arg(section_start).arg(section_end).arg(section_length).arg(section_length_after_decimation).arg(presets));
 
 
     QString custom_lists;
