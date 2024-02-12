@@ -529,6 +529,7 @@ void WobblyWindow::createFrameDetailsViewer() {
     frame_num_label = new QLabel;
     frame_num_label->setTextFormat(Qt::RichText);
     time_label = new QLabel;
+    offset_label = new QLabel;
     matches_label = new QLabel;
     matches_label->setTextFormat(Qt::RichText);
     matches_label->resize(QFontMetrics(matches_label->font()).horizontalAdvance("CCCCCCCCCCCCCCCCCCCCC"), matches_label->height());
@@ -552,6 +553,7 @@ void WobblyWindow::createFrameDetailsViewer() {
     QVBoxLayout *vbox = new QVBoxLayout;
     vbox->addWidget(frame_num_label);
     vbox->addWidget(time_label);
+    vbox->addWidget(offset_label);
     vbox->addWidget(matches_label);
     vbox->addWidget(section_label);
     vbox->addWidget(custom_list_label);
@@ -4811,6 +4813,80 @@ void WobblyWindow::updateFrameDetails() {
     section_label->setText(QStringLiteral("Section: [%1,%2] = %3 | %4<br />Presets:<br />%5").arg(section_start).arg(section_end).arg(section_length).arg(section_length_after_decimation).arg(presets));
 
 
+    matches_start = std::max(matches_start, section_start + 1);
+    matches_end = std::min(matches_end, section_end - 1);
+
+    bool unique_pattern = false;
+    int pattern_offset, forward_pattern;
+    for (forward_pattern = 2; !unique_pattern && --forward_pattern >= 0; ) {
+        char first_duplicate = forward_pattern ? 'n' : 'c';
+        char second_duplicate = forward_pattern ? 'c' : 'b';
+        for (pattern_offset = -1; !unique_pattern && ++pattern_offset <= 4; ) {
+            bool found_first = false, found_second = false;
+            for (int i = matches_start; i <= matches_end; i++) {
+                char match = project->getMatch(i);
+                int index_within_pattern = (i - matches_start - pattern_offset + 5) % 5;
+                if (i - matches_start >= 2 && project->getMatch(i - 2) == match && project->getMatch(i - 1) == match)
+                    unique_pattern = true;
+                if (index_within_pattern <= 2 && match == second_duplicate) {
+                    if (index_within_pattern == 0 && i - matches_start >= 1 && project->getMatch(i - 1) == first_duplicate)
+                        unique_pattern = true;
+                    found_second = true;
+                    continue;
+                }
+                if (index_within_pattern >= 2 && match == first_duplicate) {
+                    found_first = true;
+                    continue;
+                }
+                unique_pattern = false;
+                break;
+            }
+            if (!found_first || !found_second)
+                unique_pattern = false;
+        }
+    }
+
+    int frame_halftime_after_decimation = project->frameNumberAfterDecimation(current_frame) * 10 + 5;
+    if (project->isDecimatedFrame(current_frame) && current_frame == project->getNumFrames(PostSource) - 1)
+        frame_halftime_after_decimation += 10;
+    if (project->isDecimatedFrame(current_frame) && (project->getMatch(current_frame) == 'b' || project->getMatch(current_frame) == 'p'))
+        frame_halftime_after_decimation -= 10;
+    int frame_halftime_before_decimation = current_frame * 8;
+    if (unique_pattern) {
+        int index_within_pattern = (current_frame - matches_start - pattern_offset + 5) % 5;
+        frame_halftime_before_decimation += 4 * forward_pattern + 2 * (index_within_pattern - 1);
+
+        char match = project->getMatch(current_frame);
+        if (current_frame == section_start && forward_pattern && index_within_pattern >= 3 && match != 'n')
+            frame_halftime_before_decimation -= 10;
+        else if (current_frame == section_start && !forward_pattern && match == 'n')
+            frame_halftime_before_decimation += 10;
+        else if (current_frame == section_end && forward_pattern && match == 'b')
+            frame_halftime_before_decimation -= 10;
+        else if (current_frame == section_end && !forward_pattern && index_within_pattern <= 1 && match != 'b')
+            frame_halftime_before_decimation += 10;
+    } else {
+        switch (project->getMatch(current_frame)) {
+        case 'n':
+        case 'u':
+            frame_halftime_before_decimation += 8;
+            break;
+        case 'b':
+        case 'p':
+            frame_halftime_before_decimation += 0;
+            break;
+        default:
+            frame_halftime_before_decimation += 4;
+        }
+    }
+
+    QString offset("Offset (240 Hz): ");
+    offset += QString::number(frame_halftime_after_decimation - frame_halftime_before_decimation);
+    if (!unique_pattern)
+        offset += " (failed to identify pattern)";
+    offset_label->setText(offset);
+
+
     QString custom_lists;
     const CustomListsModel *lists = project->getCustomListsModel();
     for (size_t i = 0; i < lists->size(); i++) {
@@ -4861,6 +4937,7 @@ void WobblyWindow::updateFrameDetails() {
     if (settings_print_details_check->isChecked()) {
         QString drawn_text = frame_num_label->text() + "<br />";
         drawn_text += time_label->text() + "<br />";
+        drawn_text += offset_label->text() + "<br />";
         drawn_text += matches_label->text() + "<br />";
         drawn_text += section_label->text() + "<br />";
         drawn_text += custom_list_label->text() + "<br />";

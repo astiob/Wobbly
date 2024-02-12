@@ -86,6 +86,7 @@ private:
 
     QLabel *frame_num_label;
     QLabel *time_label;
+    QLabel *offset_label;
     QLabel *matches_label;
     QLabel *section_label;
     QLabel *custom_list_label;
