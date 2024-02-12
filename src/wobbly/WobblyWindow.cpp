@@ -4810,7 +4810,9 @@ void WobblyWindow::updateFrameDetails() {
     if (section_end + 1 == project->getNumFrames(PostSource) - 1 && project->isDecimatedFrame(section_end + 1))
         section_length_after_decimation++;
 
-    section_label->setText(QStringLiteral("Section: [%1,%2] = %3 | %4<br />Presets:<br />%5").arg(section_start).arg(section_end).arg(section_length).arg(section_length_after_decimation).arg(presets));
+    int section_length_offset = section_length_after_decimation * 10 - section_length * 8;
+
+    section_label->setText(QStringLiteral("Section: [%1,%2] = %3 | %4 (diff %5 @ 240 Hz)<br />Presets:<br />%6").arg(section_start).arg(section_end).arg(section_length).arg(section_length_after_decimation).arg(section_length_offset).arg(presets));
 
 
     matches_start = std::max(matches_start, section_start + 1);
