@@ -4712,6 +4712,10 @@ void WobblyWindow::updateFrameDetails() {
     if (preview)
         time += "</b>";
 
+    time += QStringLiteral(" (diff c=%1, n=%2 @ 240 Hz)")
+        .arg(project->frameNumberAfterDecimation(current_frame) * 10 - current_frame * 8)
+        .arg(project->frameNumberAfterDecimation(current_frame) * 10 - (current_frame + 1) * 8);
+
     time_label->setText(time);
 
 
