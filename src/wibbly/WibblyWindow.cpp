@@ -406,6 +406,9 @@ void WibblyWindow::createMainWindow() {
             }
         }
 
+        vfm_dmetrics_enabled->setChecked(job.getDMetrics().enabled);
+        vfm_dmetrics_nt->setValue(job.getDMetrics().nt);
+
         try {
             evaluateDisplayScript();
         } catch (WobblyException &e) {
