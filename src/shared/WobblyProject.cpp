@@ -1957,26 +1957,34 @@ void WobblyProject::setMatch(int frame, char match) {
 }
 
 
-void WobblyProject::cycleMatchBCN(int frame) {
+void WobblyProject::cycleMatchCNB(int frame) {
     if (frame < 0 || frame >= getNumFrames(PostSource))
         throw WobblyException("Can't cycle the match for frame " + std::to_string(frame) + ": frame number out of range.");
 
-    // N -> C -> B. This is the order Yatta uses, so we use it.
+    // C -> N -> B
 
     char match = getMatch(frame);
 
-    if (match == 'n')
-        match = 'c';
-    else if (match == 'c') {
-        if (frame == 0)
-            match = 'n';
-        else
-            match = 'b';
-    } else if (match == 'b') {
-        if (frame == getNumFrames(PostSource) - 1)
-            match = 'c';
-        else
-            match = 'n';
+    while (true) {
+        switch (match) {
+            case 'c':
+                match = 'n';
+                break;
+            case 'n':
+                match = 'b';
+                break;
+            default:
+                match = 'c';
+                break;
+        }
+
+        if (frame == 0 && match == 'b')
+            continue;
+
+        if (frame == getNumFrames(PostSource) - 1 && match == 'n')
+            continue;
+
+        break;
     }
 
     setMatch(frame, match);
@@ -1989,32 +1997,36 @@ void WobblyProject::cycleMatch(int frame) {
     if (frame < 0 || frame >= getNumFrames(PostSource))
         throw WobblyException("Can't cycle the match for frame " + std::to_string(frame) + ": frame number out of range.");
 
-    // U -> B -> N -> C -> P
+    // C -> N -> B -> P -> U
 
     char match = getMatch(frame);
 
-    if (match == 'u') {
-        if (frame == 0)
-            match = 'n';
-        else
-            match = 'b';
-    } else if (match == 'b') {
-        if (frame == getNumFrames(PostSource) - 1)
-            match = 'c';
-        else
-            match = 'n';
-    } else if (match == 'n') {
-        match = 'c';
-    } else if (match == 'c') {
-        if (frame == 0)
-            match = 'u';
-        else
-            match = 'p';
-    } else if (match == 'p') {
-        if (frame == getNumFrames(PostSource) - 1)
-            match = 'b';
-        else
-            match = 'u';
+    while (true) {
+        switch (match) {
+            case 'c':
+                match = 'n';
+                break;
+            case 'n':
+                match = 'b';
+                break;
+            case 'b':
+                match = 'p';
+                break;
+            case 'p':
+                match = 'u';
+                break;
+            default:
+                match = 'c';
+                break;
+        }
+
+        if (frame == 0 && (match == 'b' || match == 'c'))
+            continue;
+
+        if (frame == getNumFrames(PostSource) - 1 && (match == 'n' || match == 'u'))
+            continue;
+
+        break;
     }
 
     setMatch(frame, match);

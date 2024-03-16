@@ -472,7 +472,7 @@ void WobblyWindow::createShortcuts() {
         { "", "Shift+Down",         "Jump to previous combed frame", &WobblyWindow::jumpToPreviousCombedFrame },
         { "", "Alt+Up",             "Jump to next section with pattern failure", &WobblyWindow::jumpToNextPatternFailureSection },
         { "", "Alt+Down",           "Jump to previous section with pattern failure", &WobblyWindow::jumpToPreviousPatternFailureSection },
-        { "", "S",                  "Cycle the current frame's match", &WobblyWindow::cycleMatchBCN },
+        { "", "S",                  "Cycle the current frame's match", &WobblyWindow::cycleMatchCNB },
         { "", "Ctrl+F",             "Replace current frame with next", &WobblyWindow::freezeForward },
         { "", "Shift+F",            "Replace current frame with previous", &WobblyWindow::freezeBackward },
         { "", "F",                  "Freeze current frame or a range", &WobblyWindow::freezeRange },
@@ -5044,11 +5044,11 @@ void WobblyWindow::jumpToPreviousPatternFailureSection() {
 }
 
 
-void WobblyWindow::cycleMatchBCN() {
+void WobblyWindow::cycleMatchCNB() {
     if (!project)
         return;
 
-    project->cycleMatchBCN(current_frame);
+    project->cycleMatchCNB(current_frame);
     commit("Cycle frame's match");
 
     updateSectionOrphanFrames(current_frame);

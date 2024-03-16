@@ -392,7 +392,7 @@ public slots:
     void deleteFreezeFrame();
     void toggleFreezeFrames();
 
-    void cycleMatchBCN();
+    void cycleMatchCNB();
 
     void toggleDecimation();
 

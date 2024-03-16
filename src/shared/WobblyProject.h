@@ -239,7 +239,7 @@ class WobblyProject : public QObject {
 
         char getMatch(int frame) const;
         void setMatch(int frame, char match);
-        void cycleMatchBCN(int frame);
+        void cycleMatchCNB(int frame);
         void cycleMatch(int frame);
 
 
