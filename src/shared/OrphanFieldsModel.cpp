@@ -46,10 +46,12 @@ QVariant OrphanFieldsModel::data(const QModelIndex &index, int role) const {
     if (role == Qt::DisplayRole) {
         const auto &frame = std::next(cbegin(), index.row());
 
-        if (index.column() == FirstColumn)
+        if (index.column() == FrameColumn)
             return QVariant(frame->first);
-        else if (index.column() == LastColumn)
-            return QVariant(QString(frame->second));
+        else if (index.column() == MatchColumn)
+            return QVariant(QString(frame->second.match));
+        else if (index.column() == DecimationColumn)
+            return QVariant(QString(frame->second.decimated ? "Yes" : "No"));
     }
 
     return QVariant();
@@ -59,7 +61,8 @@ QVariant OrphanFieldsModel::data(const QModelIndex &index, int role) const {
 QVariant OrphanFieldsModel::headerData(int section, Qt::Orientation orientation, int role) const {
     const char *column_headers[ColumnCount] = {
         "Frame",
-        "Type"
+        "Type",
+        "Decimated",
     };
 
     if (role == Qt::DisplayRole) {
@@ -74,8 +77,8 @@ QVariant OrphanFieldsModel::headerData(int section, Qt::Orientation orientation,
 }
 
 
-void OrphanFieldsModel::insert(const std::pair<int, char> &orphan) {
-    std::map<int, char>::const_iterator it = lower_bound(orphan.first);
+void OrphanFieldsModel::insert(const value_type &orphan) {
+    OrphanFieldMap::const_iterator it = lower_bound(orphan.first);
 
     if (it != cend() && it->first == orphan.first)
         return;
@@ -86,14 +89,14 @@ void OrphanFieldsModel::insert(const std::pair<int, char> &orphan) {
 
     beginInsertRows(QModelIndex(), new_row, new_row);
 
-    std::map<int, char>::insert(it, orphan);
+    OrphanFieldMap::insert(it, orphan);
 
     endInsertRows();
 }
 
 
 void OrphanFieldsModel::erase(int frame) {
-    std::map<int, char>::const_iterator it = find(frame);
+    OrphanFieldMap::const_iterator it = find(frame);
 
     if (it == cend())
         return;
@@ -102,7 +105,7 @@ void OrphanFieldsModel::erase(int frame) {
 
     beginRemoveRows(QModelIndex(), row, row);
 
-    std::map<int, char>::erase(it);
+    OrphanFieldMap::erase(it);
 
     endRemoveRows();
 }
@@ -114,7 +117,7 @@ void OrphanFieldsModel::clear() {
 
     beginRemoveRows(QModelIndex(), 0, size() - 1);
 
-    std::map<int, char>::clear();
+    OrphanFieldMap::clear();
 
     endRemoveRows();
 }

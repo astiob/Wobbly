@@ -28,12 +28,13 @@ SOFTWARE.
 #include "WobblyTypes.h"
 
 
-class OrphanFieldsModel : public QAbstractTableModel, private std::map<int, char> {
+class OrphanFieldsModel : public QAbstractTableModel, private OrphanFieldMap {
     Q_OBJECT
 
     enum Columns {
-        FirstColumn = 0,
-        LastColumn,
+        FrameColumn = 0,
+        MatchColumn,
+        DecimationColumn,
         ColumnCount
     };
 
@@ -48,17 +49,17 @@ public:
 
     QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const;
 
-    using std::map<int, char>::cbegin;
-    using std::map<int, char>::cend;
-    using std::map<int, char>::count;
-    using std::map<int, char>::lower_bound;
-    using std::map<int, char>::upper_bound;
-    using std::map<int, char>::size;
-    using std::map<int, char>::const_iterator;
+    using OrphanFieldMap::cbegin;
+    using OrphanFieldMap::cend;
+    using OrphanFieldMap::count;
+    using OrphanFieldMap::lower_bound;
+    using OrphanFieldMap::upper_bound;
+    using OrphanFieldMap::size;
+    using OrphanFieldMap::const_iterator;
 
-    void insert(const std::pair<int, char> &orphan);
+    void insert(const value_type &orphan);
 
-    void erase(int freeze_frame);
+    void erase(int frame);
 
     void clear();
 };

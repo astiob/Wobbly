@@ -2664,15 +2664,14 @@ void WobblyProject::updateOrphanFields() {
 }
 
 void WobblyProject::updateSectionOrphanFields(int section_start, int section_end) {
+    orphan_fields->erase(section_start);
+    orphan_fields->erase(section_end - 1);
+
     if (getMatch(section_start) == 'n')
-        addOrphanField({ section_start, 'n' });
-    else
-        deleteOrphanField(section_start);
+        orphan_fields->insert({ section_start, { 'n', isDecimatedFrame(section_start) } });
 
     if (getMatch(section_end - 1) == 'b')
-        addOrphanField({ section_end - 1, 'b' });
-    else
-        deleteOrphanField(section_end - 1);
+        orphan_fields->insert({ section_end - 1, { 'b', isDecimatedFrame(section_end - 1) } });
 }
 
 
@@ -2716,26 +2715,6 @@ void WobblyProject::clearCombedFrames() {
 
 OrphanFieldsModel *WobblyProject::getOrphanFieldsModel() {
     return orphan_fields;
-}
-
-
-void WobblyProject::addOrphanField(const std::pair<int, char> &orphan) {
-    if (orphan.first < 0 || orphan.first >= getNumFrames(PostSource))
-        throw WobblyException("Can't mark frame " + std::to_string(orphan.first) + " as orphan: value out of range.");
-
-    orphan_fields->insert(orphan);
-
-    setModified(true);
-}
-
-
-void WobblyProject::deleteOrphanField(int frame) {
-    if (frame < 0 || frame >= getNumFrames(PostSource))
-        throw WobblyException("Can't mark frame " + std::to_string(frame) + " as not orphan: value out of range.");
-
-    orphan_fields->erase(frame);
-
-    setModified(true);
 }
 
 

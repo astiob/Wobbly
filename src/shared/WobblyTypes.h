@@ -80,6 +80,12 @@ struct CustomList {
 
 typedef std::vector<CustomList> CustomListVector;
 
+struct OrphanField {
+    char match;
+    bool decimated;
+};
+
+typedef std::map<int, OrphanField> OrphanFieldMap;
 
 struct Resize {
     bool enabled;

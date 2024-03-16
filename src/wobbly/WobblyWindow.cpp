@@ -5184,6 +5184,8 @@ void WobblyWindow::toggleDecimation() {
         project->addDecimatedFrame(current_frame);
     commit("Toggle decimation");
 
+    updateSectionOrphanFields(current_frame);
+
     if (preview) {
         try {
             evaluateFinalScript();
@@ -5481,6 +5483,9 @@ void WobblyWindow::setDecimationPattern() {
     cancelRange();
 
     updateFrameRatesViewer();
+
+    if (project)
+        project->updateOrphanFields();
 
     try {
         evaluateScript(preview);

@@ -311,7 +311,6 @@ class WobblyProject : public QObject {
         void clearCombedFrames();
 
         OrphanFieldsModel *getOrphanFieldsModel();
-        void addOrphanField(const std::pair<int, char> &orphan);
         void deleteOrphanField(int frame);
         bool isOrphanField(int frame) const;
         void clearOrphanFields();
