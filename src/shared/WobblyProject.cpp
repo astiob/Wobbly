@@ -1975,8 +1975,6 @@ void WobblyProject::cycleMatchBCN(int frame) {
     } else if (match == 'b') {
         if (frame == getNumFrames(PostSource) - 1)
             match = 'c';
-        else if (frame == getSectionEnd(frame))
-            match = 'b';
         else
             match = 'n';
     }
@@ -2003,8 +2001,6 @@ void WobblyProject::cycleMatch(int frame) {
     } else if (match == 'b') {
         if (frame == getNumFrames(PostSource) - 1)
             match = 'c';
-        else if (frame == getSectionEnd(frame))
-            match = 'b';
         else
             match = 'n';
     } else if (match == 'n') {
