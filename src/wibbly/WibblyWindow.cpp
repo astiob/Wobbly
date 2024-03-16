@@ -70,6 +70,9 @@ SOFTWARE.
 #define KEY_VDECIMATE                       QStringLiteral("vdecimate/")
 #define KEY_FADES_THRESHOLD                 QStringLiteral("fades_threshold")
 
+#define KEY_DMETRICS_ENABLED                QStringLiteral("dmetrics/enabled")
+#define KEY_DMETRICS_NT                     QStringLiteral("dmetrics/nt")
+
 
 static std::mutex requests_mutex;
 static std::condition_variable requests_condition;
@@ -406,8 +409,12 @@ void WibblyWindow::createMainWindow() {
             }
         }
 
-        vfm_dmetrics_enabled->setChecked(job.getDMetrics().enabled);
-        vfm_dmetrics_nt->setValue(job.getDMetrics().nt);
+        {
+            QSignalBlocker block1(vfm_dmetrics_enabled);
+            QSignalBlocker block2(vfm_dmetrics_nt);
+            vfm_dmetrics_enabled->setChecked(job.getDMetrics().enabled);
+            vfm_dmetrics_nt->setValue(job.getDMetrics().nt);
+        }
 
         try {
             evaluateDisplayScript();
@@ -895,7 +902,6 @@ void WibblyWindow::createVFMWindow() {
     vfm_dmetrics_nt->setPrefix("DMetrics nt: ");
     vfm_dmetrics_nt->setMinimum(0);
     connect(vfm_dmetrics_nt, static_cast<void (QSpinBox:: *)(int)>(&QSpinBox::valueChanged), parametersChanged);
-    vfm_dmetrics_nt->setValue(10);
     vbox->addWidget(vfm_dmetrics_nt);
 
     vbox->addStretch(1);
@@ -1667,6 +1673,8 @@ void WibblyWindow::readJobs() {
                 job->setVDecimateParameter(param->name.toStdString(), settings.value(key + KEY_VDECIMATE + param->name).toBool());
         }
 
+        job->setDMetrics(settings.value(key + KEY_DMETRICS_ENABLED).toBool(), settings.value(key + KEY_DMETRICS_NT).toInt());
+
         job->setFadesThreshold(settings.value(key + KEY_FADES_THRESHOLD).toDouble());
 
         main_jobs_list->addItem(QString::fromStdString(job->getInputFile()));
@@ -1727,6 +1735,9 @@ void WibblyWindow::writeJobs() {
             else if (param->type == VIVTCParamBool)
                 settings.setValue(key + KEY_VDECIMATE + param->name, job->getVDecimateParameterBool(param->name.toStdString()));
         }
+
+        settings.setValue(key + KEY_DMETRICS_ENABLED, job->getDMetrics().enabled);
+        settings.setValue(key + KEY_DMETRICS_NT, job->getDMetrics().nt);
 
         settings.setValue(key + KEY_FADES_THRESHOLD, job->getFadesThreshold());
     }
