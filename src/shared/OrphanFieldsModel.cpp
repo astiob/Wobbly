@@ -18,16 +18,16 @@ SOFTWARE.
 */
 
 
-#include "OrphanFramesModel.h"
+#include "OrphanFieldsModel.h"
 
-OrphanFramesModel::OrphanFramesModel(QObject *parent)
+OrphanFieldsModel::OrphanFieldsModel(QObject *parent)
     : QAbstractTableModel(parent)
 {
 
 }
 
 
-int OrphanFramesModel::rowCount(const QModelIndex &parent) const {
+int OrphanFieldsModel::rowCount(const QModelIndex &parent) const {
     if (parent.isValid())
         return 0;
 
@@ -35,14 +35,14 @@ int OrphanFramesModel::rowCount(const QModelIndex &parent) const {
 }
 
 
-int OrphanFramesModel::columnCount(const QModelIndex &parent) const {
+int OrphanFieldsModel::columnCount(const QModelIndex &parent) const {
     if (parent.isValid())
         return 0;
 
     return ColumnCount;
 }
 
-QVariant OrphanFramesModel::data(const QModelIndex &index, int role) const {
+QVariant OrphanFieldsModel::data(const QModelIndex &index, int role) const {
     if (role == Qt::DisplayRole) {
         const auto &frame = std::next(cbegin(), index.row());
 
@@ -56,7 +56,7 @@ QVariant OrphanFramesModel::data(const QModelIndex &index, int role) const {
 }
 
 
-QVariant OrphanFramesModel::headerData(int section, Qt::Orientation orientation, int role) const {
+QVariant OrphanFieldsModel::headerData(int section, Qt::Orientation orientation, int role) const {
     const char *column_headers[ColumnCount] = {
         "Frame",
         "Type"
@@ -74,7 +74,7 @@ QVariant OrphanFramesModel::headerData(int section, Qt::Orientation orientation,
 }
 
 
-void OrphanFramesModel::insert(const std::pair<int, char> &orphan) {
+void OrphanFieldsModel::insert(const std::pair<int, char> &orphan) {
     std::map<int, char>::const_iterator it = lower_bound(orphan.first);
 
     if (it != cend() && it->first == orphan.first)
@@ -92,7 +92,7 @@ void OrphanFramesModel::insert(const std::pair<int, char> &orphan) {
 }
 
 
-void OrphanFramesModel::erase(int frame) {
+void OrphanFieldsModel::erase(int frame) {
     std::map<int, char>::const_iterator it = find(frame);
 
     if (it == cend())
@@ -108,7 +108,7 @@ void OrphanFramesModel::erase(int frame) {
 }
 
 
-void OrphanFramesModel::clear() {
+void OrphanFieldsModel::clear() {
     if (!size())
         return;
 

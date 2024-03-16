@@ -27,7 +27,7 @@ shared_moc_files = src/shared/moc_BookmarksModel.cpp \
 				   src/shared/moc_ListWidget.cpp \
 				   src/shared/moc_PresetsModel.cpp \
 				   src/shared/moc_ProgressDialog.cpp \
-				   src/shared/moc_OrphanFramesModel.cpp \
+				   src/shared/moc_OrphanFieldsModel.cpp \
 				   src/shared/moc_ScrollArea.cpp \
 				   src/shared/moc_SectionsModel.cpp \
 				   src/shared/moc_WobblyProject.cpp
@@ -108,8 +108,8 @@ shared_sources = $(rapidjson_sources) \
 				 src/shared/PresetsModel.h \
 				 src/shared/ProgressDialog.cpp \
 				 src/shared/ProgressDialog.h \
-				 src/shared/OrphanFramesModel.cpp \
-				 src/shared/OrphanFramesModel.h \
+				 src/shared/OrphanFieldsModel.cpp \
+				 src/shared/OrphanFieldsModel.h \
 				 src/shared/RandomStuff.h \
 				 src/shared/ScrollArea.cpp \
 				 src/shared/ScrollArea.h \

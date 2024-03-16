@@ -18,8 +18,8 @@ SOFTWARE.
 */
 
 
-#ifndef ORPHANFRAMESMODEL_H
-#define ORPHANFRAMESMODEL_H
+#ifndef ORPHANFIELDSMODEL_H
+#define ORPHANFIELDSMODEL_H
 
 #include <map>
 
@@ -28,7 +28,7 @@ SOFTWARE.
 #include "WobblyTypes.h"
 
 
-class OrphanFramesModel : public QAbstractTableModel, private std::map<int, char> {
+class OrphanFieldsModel : public QAbstractTableModel, private std::map<int, char> {
     Q_OBJECT
 
     enum Columns {
@@ -38,7 +38,7 @@ class OrphanFramesModel : public QAbstractTableModel, private std::map<int, char
     };
 
 public:
-    OrphanFramesModel(QObject *parent = Q_NULLPTR);
+    OrphanFieldsModel(QObject *parent = Q_NULLPTR);
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const;
 
@@ -63,4 +63,4 @@ public:
     void clear();
 };
 
-#endif // ORPHANFRAMESMODEL_H
+#endif // ORPHANFIELDSMODEL_H

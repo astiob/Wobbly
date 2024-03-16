@@ -267,7 +267,7 @@ private:
     void createCMatchSequencesWindow();
     void createFadesWindow();
     void createCombedFramesWindow();
-    void createOrphanFramesWindow();
+    void createOrphanFieldsWindow();
     void createBookmarksWindow();
     void createSettingsWindow();
     void createPluginWindow();
@@ -299,7 +299,7 @@ private:
     void initialiseCMatchSequencesWindow();
     void updateFadesWindow();
     void initialiseCombedFramesWindow();
-    void initialiseOrphanFramesWindow();
+    void initialiseOrphanFieldsWindow();
     void initialiseBookmarksWindow();
     void initialiseUIFromProject();
 
@@ -430,7 +430,7 @@ public slots:
     void showHideCMatchSequencesWindow();
     void showHideFadesWindow();
     void showHideCombedFramesWindow();
-    void showHideOrphanFramesWindow();
+    void showHideOrphanFieldsWindow();
     void showHideBookmarksWindow();
 
     void showHideFrameDetailsOnVideo();
@@ -446,8 +446,8 @@ public slots:
     void setDecimationPattern();
     void setMatchAndDecimationPatterns();
 
-    void updateSectionOrphanFrames(int frame);
-    void updateSectionOrphanFrames(const Section *section);
+    void updateSectionOrphanFields(int frame);
+    void updateSectionOrphanFields(const Section *section);
 
     void guessCurrentSectionPatternsFromMics();
     void guessProjectPatternsFromMics();
