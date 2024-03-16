@@ -385,7 +385,7 @@ void WobblyWindow::createMenu() {
 
     connect(helpAbout, &QAction::triggered, [this] () {
         QMessageBox::about(this, QStringLiteral("About Wobbly"), QStringLiteral(
-            "<a href='https://github.com/Setsugennoao/Wobbly'>https://github.com/Setsugennoao/Wobbly</a><br />"
+            "<a href='https://github.com/Jaded-Encoding-Thaumaturgy/Wobbly'>https://github.com/Jaded-Encoding-Thaumaturgy/Wobbly</a><br />"
             "<br />"
             "Copyright (c) 2015, John Smith<br />"
             "Copyright (c) 2023, Setsugen no ao<br />"
