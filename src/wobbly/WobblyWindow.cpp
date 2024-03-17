@@ -4052,7 +4052,7 @@ void WobblyWindow::saveScript() {
             path = video_path;
         else
             path = project_path;
-        path += ".py";
+        path += ".vpy";
 
         realSaveScript(path);
     } catch (WobblyException &e) {
@@ -4071,7 +4071,7 @@ void WobblyWindow::saveScriptAs() {
             dir = video_path;
         else
             dir = project_path;
-        dir += ".py";
+        dir += ".vpy";
 
         QString path = QFileDialog::getSaveFileName(this, QStringLiteral("Save script"), dir, QStringLiteral("VapourSynth scripts (*.py *.vpy);;All files (*)"));
 
