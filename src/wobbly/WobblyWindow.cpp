@@ -4819,8 +4819,8 @@ void WobblyWindow::updateFrameDetails() {
     section_label->setText(QStringLiteral("Section: [%1,%2] = %3 | %4 (diff %5 @ 240 Hz)<br />Presets:<br />%6").arg(section_start).arg(section_end).arg(section_length).arg(section_length_after_decimation).arg(section_length_offset).arg(presets));
 
 
-    matches_start = std::max(matches_start, section_start + 1);
-    matches_end = std::min(matches_end, section_end - 1);
+    matches_start = std::max(std::max(matches_start, section_start), std::min(section_start + 2, std::min(matches_end, section_end) - 4));
+    matches_end = std::min(std::min(matches_end, section_end), std::max(section_end - 2, std::max(matches_start, section_start) + 4));
 
     bool unique_pattern = false;
     int pattern_offset, forward_pattern;
@@ -4859,7 +4859,7 @@ void WobblyWindow::updateFrameDetails() {
         frame_halftime_after_decimation -= 10;
     int frame_halftime_before_decimation = current_frame * 8;
     if (unique_pattern) {
-        int index_within_pattern = (current_frame - matches_start - pattern_offset + 5) % 5;
+        int index_within_pattern = (current_frame - matches_start - pattern_offset + 10) % 5;
         frame_halftime_before_decimation += 4 * forward_pattern + 2 * (index_within_pattern - 1);
 
         char match = project->getMatch(current_frame);
