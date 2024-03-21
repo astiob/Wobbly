@@ -544,6 +544,7 @@ void WobblyWindow::createFrameDetailsViewer() {
     mmetric_label->setTextFormat(Qt::RichText);
     vmetric_label = new QLabel;
     vmetric_label->setTextFormat(Qt::RichText);
+    pict_type_label = new QLabel;
     combed_label = new QLabel;
     bookmark_label = new QLabel;
     bookmark_label->setWordWrap(true);
@@ -559,6 +560,7 @@ void WobblyWindow::createFrameDetailsViewer() {
     vbox->addWidget(mmetric_label);
     vbox->addWidget(vmetric_label);
     vbox->addWidget(mic_label);
+    vbox->addWidget(pict_type_label);
     vbox->addWidget(combed_label);
     vbox->addWidget(bookmark_label);
     vbox->addStretch(1);
@@ -4564,6 +4566,7 @@ void WobblyWindow::requestFrames(int n) {
         frame_slider->setValue(n);
     }
 
+    current_pict_type.clear();
     updateFrameDetails();
 
     if (!vsnode[(int)preview])
@@ -4619,6 +4622,11 @@ void WobblyWindow::frameDone(void *framev, int n, bool preview_node, const QStri
         return;
     }
 
+    // error pointer must be non-null to enable non-exceptional return in case of missing/bad property
+    int pict_type_error;
+    const char *pict_type_data = vsapi->mapGetData(vsapi->getFramePropertiesRO(frame), "_PictType", 0, &pict_type_error);
+    QString pict_type(pict_type_data ? pict_type_data : "&lt;unknown&gt;");
+
     int width = vsapi->getFrameWidth(frame, 0);
     int height = vsapi->getFrameHeight(frame, 0);
     uint8_t *frame_data = packRGBFrame(vsapi, frame);
@@ -4639,8 +4647,12 @@ void WobblyWindow::frameDone(void *framev, int n, bool preview_node, const QStri
         // setOverrideCursor called in requestFrames
         QApplication::restoreOverrideCursor();
 
+        current_pict_type = pict_type;
         original_frame_width = width;
         original_frame_height = height;
+
+        // current_pict_type has changed
+        updateFrameDetails();
     }
 
     thumb_labels[offset + MAX_THUMBNAILS / 2]->setPixmap(getThumbnail(image));
@@ -4810,6 +4822,9 @@ void WobblyWindow::updateFrameDetails() {
     }
 
 
+    pict_type_label->setText(QStringLiteral("Picture type: ") + current_pict_type);
+
+
     const Bookmark *bookmark = project->getBookmark(current_frame);
 
     if (bookmark) {
@@ -4833,6 +4848,7 @@ void WobblyWindow::updateFrameDetails() {
         drawn_text += mmetric_label->text() + "<br />";
         drawn_text += vmetric_label->text() + "<br />";
         drawn_text += mic_label->text() + "<br />";
+        drawn_text += pict_type_label->text() + "<br />";
         drawn_text += combed_label->text() + "<br />";
         drawn_text += bookmark_label->text();
 
