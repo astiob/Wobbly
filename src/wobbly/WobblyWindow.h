@@ -94,6 +94,7 @@ private:
     QLabel *mic_label;
     QLabel *mmetric_label;
     QLabel *vmetric_label;
+    QLabel *pict_type_label;
     QLabel *combed_label;
     QLabel *bookmark_label;
 
@@ -236,6 +237,7 @@ private:
 
     QSettings settings;
 
+    QString current_pict_type;
     int original_frame_width;
     int original_frame_height;
 
