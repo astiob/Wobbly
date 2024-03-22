@@ -103,6 +103,16 @@ struct UndoStep {
 };
 
 
+enum DecimationFunction {
+    AUTO = 0,
+    SELECTEVERY,
+    DELETEFRAMES,
+};
+
+struct FinalScriptFormat {
+    DecimationFunction decimation_function;
+};
+
 class WobblyProject : public QObject {
     Q_OBJECT
 
@@ -432,12 +442,12 @@ class WobblyProject : public QObject {
         void trimToScript(std::string &script) const;
         void fieldHintToScript(std::string &script) const;
         void freezeFramesToScript(std::string &script) const;
-        void decimatedFramesToScript(std::string &script) const;
+        void decimatedFramesToScript(std::string &script, DecimationFunction decimation_function) const;
         void cropToScript(std::string &script) const;
         void resizeAndBitDepthToScript(std::string &script, bool resize_enabled, bool depth_enabled) const;
         void setOutputToScript(std::string &script) const;
 
-        std::string generateFinalScript(bool save_source_node = true) const;
+        std::string generateFinalScript(bool save_source_node = true, FinalScriptFormat format = {}) const;
         std::string generateMainDisplayScript() const;
 
         std::string generateTimecodesV1() const;

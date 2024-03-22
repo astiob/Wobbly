@@ -75,6 +75,7 @@ SOFTWARE.
 
 #define KEY_COMPACT_PROJECT_FILES           QStringLiteral("projects/compact_project_files")
 #define KEY_USE_RELATIVE_PATHS              QStringLiteral("projects/use_relative_paths")
+#define KEY_DECIMATION_FUNCTION             QStringLiteral("projects/decimation_function")
 
 
 struct CallbackData {
@@ -175,6 +176,8 @@ void WobblyWindow::readSettings() {
     settings_use_relative_paths_check->setChecked(settings.value(KEY_USE_RELATIVE_PATHS, false).toBool());
 
     settings_bookmark_description_check->setChecked(settings.value(KEY_ASK_FOR_BOOKMARK_DESCRIPTION, true).toBool());
+
+    settings_decimation_function_combo->setCurrentText(settings.value(KEY_DECIMATION_FUNCTION, "Auto").toString());
 
     settings_colormatrix_combo->setCurrentText(settings.value(KEY_COLORMATRIX, "BT 601").toString());
 
@@ -2766,6 +2769,9 @@ void WobblyWindow::createSettingsWindow() {
 
     settings_bookmark_description_check = new QCheckBox(QStringLiteral("Ask for bookmark description"));
 
+    settings_decimation_function_combo = new QComboBox;
+    settings_decimation_function_combo->addItems({ "Auto", "SelectEvery", "DeleteFrames" });
+
     settings_font_spin = new QSpinBox;
     settings_font_spin->setRange(4, 99);
 
@@ -2828,6 +2834,10 @@ void WobblyWindow::createSettingsWindow() {
 
     connect(settings_bookmark_description_check, &QCheckBox::toggled, [this] (bool checked) {
         settings.setValue(KEY_ASK_FOR_BOOKMARK_DESCRIPTION, checked);
+    });
+
+    connect(settings_decimation_function_combo, &QComboBox::currentTextChanged, [this] (const QString &text) {
+        settings.setValue(KEY_DECIMATION_FUNCTION, text);
     });
 
     connect(settings_font_spin, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), [this] (int value) {
@@ -2995,6 +3005,7 @@ void WobblyWindow::createSettingsWindow() {
     form->addRow(settings_use_relative_paths_check);
     form->addRow(settings_print_details_check);
     form->addRow(settings_bookmark_description_check);
+    form->addRow(QStringLiteral("Decimation function"), settings_decimation_function_combo);
     form->addRow(QStringLiteral("Font size"), settings_font_spin);
     form->addRow(QStringLiteral("Overlay size"), overlay_size_spin);
     form->addRow(QStringLiteral("Application style"), application_style_combo);
@@ -4031,7 +4042,17 @@ void WobblyWindow::realSaveScript(const QString &path) {
     // The currently selected preset might not have been stored in the project yet.
     presetEdited();
 
-    std::string script = project->generateFinalScript(false);
+    FinalScriptFormat format{};
+
+    QString decimation_function = settings_decimation_function_combo->currentText();
+    if (decimation_function == "SelectEvery")
+        format.decimation_function = DecimationFunction::SELECTEVERY;
+    else if (decimation_function == "DeleteFrames")
+        format.decimation_function = DecimationFunction::DELETEFRAMES;
+    else
+        format.decimation_function = DecimationFunction::AUTO;
+
+    std::string script = project->generateFinalScript(false, format);
 
     QFile file(path);
 

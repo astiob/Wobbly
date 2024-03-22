@@ -4199,7 +4199,7 @@ void WobblyProject::freezeFramesToScript(std::string &script) const {
 }
 
 
-void WobblyProject::decimatedFramesToScript(std::string &script) const {
+void WobblyProject::decimatedFramesToScript(std::string &script, DecimationFunction decimation_function) const {
     std::string delete_frames;
 
     const DecimationRangeVector &decimation_ranges = getDecimationRanges();
@@ -4283,7 +4283,7 @@ void WobblyProject::decimatedFramesToScript(std::string &script) const {
 
     select_every += "\n" + splice + "])\n\n";
 
-    if (delete_frames.size() < select_every.size())
+    if (decimation_function == DELETEFRAMES || (decimation_function == AUTO && delete_frames.size() < select_every.size()))
         script += delete_frames;
     else
         script += select_every;
@@ -4328,7 +4328,7 @@ void WobblyProject::setOutputToScript(std::string &script) const {
 }
 
 
-std::string WobblyProject::generateFinalScript(bool save_source_node) const {
+std::string WobblyProject::generateFinalScript(bool save_source_node, FinalScriptFormat format) const {
     // XXX Insert comments before and after each part.
     std::string script;
 
@@ -4361,7 +4361,7 @@ std::string WobblyProject::generateFinalScript(bool save_source_node) const {
             break;
         }
     if (decimation_needed)
-        decimatedFramesToScript(script);
+        decimatedFramesToScript(script, format.decimation_function);
 
     customListsToScript(script, PostDecimate);
 

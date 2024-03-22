@@ -185,6 +185,7 @@ private:
     SpinBox *settings_undo_steps_spin;
     QCheckBox *settings_print_details_check;
     QCheckBox *settings_bookmark_description_check;
+    QComboBox *settings_decimation_function_combo;
     SpinBox *settings_num_thumbnails_spin;
     QDoubleSpinBox *settings_thumbnail_size_dspin;
     TableWidget *settings_shortcuts_table;
