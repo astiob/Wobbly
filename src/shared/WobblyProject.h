@@ -22,7 +22,7 @@ SOFTWARE.
 #define WOBBLYPROJECT_H
 
 #ifndef PACKAGE_VERSION
-#define PACKAGE_VERSION "6"
+#define PACKAGE_VERSION "8"
 #endif
 
 #ifndef PACKAGE_URL
