@@ -8,6 +8,7 @@ on:
       - 'autogen.sh'
       - 'configure.ac'
       - 'Makefile.am'
+      - 'qt.conf'
       - '.github/workflows/windows.yml'
   workflow_dispatch:
     
@@ -46,7 +47,7 @@ jobs:
     - name: Package
       run: |
         mkdir deploy
-        cp wobbly.exe wibbly.exe deploy
+        cp wobbly.exe wibbly.exe qt.conf deploy
         cp -r styles deploy
 
         export PATH=$PATH:vapoursynth/
