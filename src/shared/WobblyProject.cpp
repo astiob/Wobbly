@@ -2193,10 +2193,7 @@ void WobblyProject::setRangeMatchesFromPattern(int range_start, int range_end, c
             continue;
         }
 
-        if (i == range_end && match == 'n')
-            setMatch(i, 'b');
-        else
-            setMatch(i, match);
+        setMatch(i, match);
     }
 
     setModified(true);
@@ -3344,16 +3341,6 @@ bool WobblyProject::guessSectionPatternsFromMics(int section_start, int minimum_
     if (section_end == getNumFrames(PostSource) && getMatch(section_end - 1) == 'n')
         setMatch(section_end - 1, 'b');
 
-    // If the last frame of the section has much higher mic with n matches than with b match, use the b match.
-    char match_index = getMatch(section_end - 1);
-
-    if (match_index == 'n') {
-        int16_t mic_n = getMics(section_end - 1)[matchCharToIndex('n')];
-        int16_t mic_b = getMics(section_end - 1)[matchCharToIndex('b')];
-        if (mic_n > mic_b * 2)
-            setMatch(section_end - 1, 'b');
-    }
-
     if (patterns[best_pattern].pattern == "c") {
         for (int i = section_start; i < section_end; i++)
             deleteDecimatedFrame(i);
@@ -3476,16 +3463,6 @@ bool WobblyProject::guessSectionPatternsFromDMetrics(int section_start, int mini
 
     if (section_start == 0 && getMatch(0) == 'b')
         setMatch(0, 'n');
-
-    // use b match if the range end is too bad at the end of the section
-    char match_index = getMatch(section_end - 1);
-
-    if (match_index == 'n') {
-        int32_t mmet_n = getMMetrics(section_end - 1)[matchCharToIndexDMetrics('n')];
-        int32_t mmet_b = getMMetrics(section_end - 1)[matchCharToIndexDMetrics('b')];
-        if (mmet_n > mmet_b * 1.5)
-            setMatch(section_end - 1, 'b');
-    }
 
     if (patterns[best_pattern].pattern == "c") {
         for (int i = section_start; i < section_end; i++)
@@ -3653,28 +3630,6 @@ bool WobblyProject::guessSectionPatternsFromMicsAndDMetrics(int section_start, i
     if (section_start == 0 && getMatch(0) == 'b')
         setMatch(0, 'n');
 
-    if (good_mics) {
-        // If the last frame of the section has much higher mic with n matches than with b match, use the b match.
-        char match_index = getMatch(section_end - 1);
-
-        if (match_index == 'n') {
-            int16_t mic_n = getMics(section_end - 1)[matchCharToIndex('n')];
-            int16_t mic_b = getMics(section_end - 1)[matchCharToIndex('b')];
-            if (mic_n > mic_b * 2)
-                setMatch(section_end - 1, 'b');
-        }
-    } else {
-        // use b match if the range end is too bad at the end of the section
-        char match_index = getMatch(section_end - 1);
-
-        if (match_index == 'n') {
-            int32_t mmet_n = getMMetrics(section_end - 1)[matchCharToIndexDMetrics('n')];
-            int32_t mmet_b = getMMetrics(section_end - 1)[matchCharToIndexDMetrics('b')];
-            if (mmet_n > mmet_b * 1.5)
-                setMatch(section_end - 1, 'b');
-        }
-    }
-
     if (best_pattern == "c") {
         for (int i = section_start; i < section_end; i++)
             deleteDecimatedFrame(i);
@@ -3829,16 +3784,6 @@ bool WobblyProject::guessSectionPatternsFromMatches(int section_start, int minim
             } else {
                 setMatch(i, pattern[i % 5]);
             }
-        }
-
-        // If the last frame of the section has much higher mic with n matches than with b match, use the b match.
-        char match_index = getMatch(section_end - 1);
-
-        if (match_index == 'n') {
-            int16_t mic_n = getMics(section_end - 1)[matchCharToIndex('n')];
-            int16_t mic_b = getMics(section_end - 1)[matchCharToIndex('b')];
-            if (mic_n > mic_b * 2)
-                setMatch(section_end - 1, 'b');
         }
 
         // A pattern was found.
