@@ -1995,7 +1995,7 @@ void WobblyProject::cycleMatch(int frame) {
                 break;
         }
 
-        if (frame == 0 && (match == 'b' || match == 'c'))
+        if (frame == 0 && (match == 'b' || match == 'p'))
             continue;
 
         if (frame == getNumFrames(PostSource) - 1 && (match == 'n' || match == 'u'))
