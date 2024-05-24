@@ -893,7 +893,7 @@ void WibblyWindow::createVFMWindow() {
     QVBoxLayout *vbox = new QVBoxLayout;
     for (size_t i = 0; i < vfm_params.size(); i++)
         vbox->addWidget(vfm_params[i].widget);
-    
+
     vfm_dmetrics_enabled = new QCheckBox("Enable DMetrics");
     connect(vfm_dmetrics_enabled, &QCheckBox::clicked, parametersChanged);
     vbox->addWidget(vfm_dmetrics_enabled);
@@ -1610,7 +1610,7 @@ void WibblyWindow::readSettings() {
 
     if (settings.contains(KEY_MAXIMUM_CACHE_SIZE))
         settings_cache_spin->setValue(settings.value(KEY_MAXIMUM_CACHE_SIZE).toInt());
-    
+
     if (settings.contains(KEY_LAST_CROP)) {
         QList<QVariant> crop_list = settings.value(KEY_LAST_CROP).toList();
         for (int i = 0; i < crop_list.size(); i++)

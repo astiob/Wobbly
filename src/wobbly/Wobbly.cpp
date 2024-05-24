@@ -66,7 +66,7 @@ int main(int argv, char **args) {
     WobblyWindow w;
 
     w.show();
-    
+
     if (app.arguments().size() == 2)
         w.openFile(app.arguments()[1]);
 

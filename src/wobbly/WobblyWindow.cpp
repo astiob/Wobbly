@@ -493,8 +493,8 @@ void WobblyWindow::createShortcuts() {
         { "", "",                   "Set decimation pattern to range", &WobblyWindow::setDecimationPattern },
         { "", "",                   "Set match and decimation patterns to range", &WobblyWindow::setMatchAndDecimationPatterns },
         { "", "F5",                 "Toggle preview mode", &WobblyWindow::togglePreview },
-        { "", "Ctrl++",         "Zoom in", &WobblyWindow::zoomIn },
-        { "", "Ctrl+-",         "Zoom out", &WobblyWindow::zoomOut },
+        { "", "Ctrl++",             "Zoom in", &WobblyWindow::zoomIn },
+        { "", "Ctrl+-",             "Zoom out", &WobblyWindow::zoomOut },
         { "", "",                   "Guess current section's patterns from matches", &WobblyWindow::guessCurrentSectionPatternsFromMatches },
         { "", "",                   "Guess every section's patterns from matches", &WobblyWindow::guessProjectPatternsFromMatches },
         { "", "Ctrl+Alt+G",         "Guess current section's patterns from mics", &WobblyWindow::guessCurrentSectionPatternsFromMics },
@@ -3053,7 +3053,7 @@ void WobblyWindow::createPluginWindow() {
     plugin_table->setHorizontalHeaderLabels({ "Plugin", "Status" });
     int row = 0;
     for (const auto &iter : filters) {
-        plugin_table->setItem(row, 0, new QTableWidgetItem(iter.first.c_str()));  
+        plugin_table->setItem(row, 0, new QTableWidgetItem(iter.first.c_str()));
         plugin_table->setItem(row, 1, new QTableWidgetItem((iter.second == FilterState::Exists) ? "Available" : ((iter.second == FilterState::MissingFilter) ? "Invalid version" : "Missing")));
         row++;
     }
@@ -3322,7 +3322,7 @@ void WobblyWindow::initialiseVapourSynth() {
 
     if (!vssapi)
         throw WobblyException("Fatal error: failed to initialise VSScript. Your VapourSynth installation is probably broken. Python probably couldn't 'import vapoursynth'.");
-       
+
     vsapi = vssapi->getVSAPI(VAPOURSYNTH_API_VERSION);
     if (!vsapi)
         throw WobblyException("Fatal error: failed to acquire VapourSynth API struct. Did you update the VapourSynth library but not the Python module (or the other way around)?");

@@ -1,5 +1,6 @@
 {
   "files.associations": {
+    "*.embeddedhtml": "html",
     "*.ejs": "ejs",
     "*.html": "html",
     "*.vpy": "python",
@@ -80,7 +81,22 @@
     "xtree": "cpp",
     "xutility": "cpp",
     "qbuttongroup": "cpp",
-    "qapplication": "cpp"
+    "qapplication": "cpp",
+    "charconv": "cpp",
+    "format": "cpp",
+    "ios": "cpp",
+    "locale": "cpp",
+    "xfacet": "cpp",
+    "xiosbase": "cpp",
+    "xlocale": "cpp",
+    "xlocbuf": "cpp",
+    "xlocinfo": "cpp",
+    "xlocmes": "cpp",
+    "xlocmon": "cpp",
+    "xlocnum": "cpp",
+    "xloctime": "cpp",
+    "xmemory": "cpp",
+    "xtr1common": "cpp"
   },
   "files.exclude": {
     "**/.git": true,

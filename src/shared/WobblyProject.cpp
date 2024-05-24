@@ -2177,7 +2177,7 @@ void WobblyProject::setRangeMatchesFromPattern(int range_start, int range_end, c
     for (int i = range_start; i <= range_end; i++) {
         if ((i == 0 && (pattern[i % 5] == 'p' || pattern[i % 5] == 'b')))
             continue;
-        
+
         if (i == getNumFrames(PostSource) - 1 && (pattern[i % 5] == 'n' || pattern[i % 5] == 'u')) {
             if (pattern[i % 5] == 'n')
                 setMatch(i, 'b');
@@ -3610,7 +3610,7 @@ bool WobblyProject::guessSectionPatternsFromMicsAndDMetrics(int section_start, i
 
     for (int i = section_start; i < section_end; i++)
         setMatch(i, best_pattern[(i + best_pattern_offset) % best_pattern.size()]);
-    
+
     if (section_end == getNumFrames(PostSource) && getMatch(section_end - 1) == 'n')
         setMatch(section_end - 1, 'b');
 

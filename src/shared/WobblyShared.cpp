@@ -133,14 +133,14 @@ GetVSScriptAPIFunc fetchVSScript() {
         nError = RegQueryValueEx(hKey, L"VSScriptDLL", 0, nullptr, (LPBYTE)szBuffer, &dwBufferSize);
         RegCloseKey(hKey);
 
-        if (ERROR_SUCCESS == nError) 
+        if (ERROR_SUCCESS == nError)
             vsscriptDLLpath = szBuffer;
     }
 
     if (vsscriptDLLpath.length()) {
         hLib = LoadLibraryW(vsscriptDLLpath.c_str());
     }
-    
+
     if (!hLib) {
 #define CONCATENATE(x, y) x ## y
 #define _Lstr(x) CONCATENATE(L, x)

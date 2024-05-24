@@ -153,7 +153,7 @@ private:
 
     DockWidget *mic_search_dock;
     QSpinBox *mic_search_minimum_spin;
-    
+
     DockWidget *dmetric_search_dock;
     QSpinBox *dmetric_search_minimum_spin;
 

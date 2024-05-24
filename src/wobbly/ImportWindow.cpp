@@ -41,7 +41,7 @@ ImportWindow::ImportWindow(const QString &_file_name, const ImportedThings &impo
 
     QPushButton *browse_button = new QPushButton(QStringLiteral("&Browse"));
     QPushButton *previous_button = new QPushButton(QStringLiteral("Previous in &series"));
-    
+
     QCheckBox *geometry_check = new QCheckBox(QStringLiteral("&Geometry"));
     QCheckBox *zoom_check = new QCheckBox(QStringLiteral("&Zoom"));
     QCheckBox *presets_check = new QCheckBox(QStringLiteral("&Presets"));
@@ -50,7 +50,7 @@ ImportWindow::ImportWindow(const QString &_file_name, const ImportedThings &impo
     QCheckBox *resize_check = new QCheckBox(QStringLiteral("&Resize"));
     QCheckBox *bits_check = new QCheckBox(QStringLiteral("Bit &depth"));
     QCheckBox *mic_check = new QCheckBox(QStringLiteral("&Mic search threshold"));
-    
+
     geometry_check->setChecked(import_things.geometry);
     zoom_check->setChecked(import_things.zoom);
     presets_check->setChecked(import_things.presets);
@@ -61,7 +61,7 @@ ImportWindow::ImportWindow(const QString &_file_name, const ImportedThings &impo
     mic_check->setChecked(import_things.mic_search);
 
     QPushButton *cancel_button = new QPushButton(QStringLiteral("Cancel"));
-    
+
     QPushButton *import_button = new QPushButton(QStringLiteral("&Import"));
     import_button->setDefault(true);
 
@@ -79,7 +79,7 @@ ImportWindow::ImportWindow(const QString &_file_name, const ImportedThings &impo
     connect(previous_button, &QPushButton::clicked, [this] () {
         emit previousWanted();
     });
-    
+
     connect(cancel_button, &QPushButton::clicked, this, &ImportWindow::reject);
 
     connect(import_button, &QPushButton::clicked, [this, geometry_check, presets_check, cl_check, crop_check, resize_check, bits_check, mic_check, zoom_check] () {
@@ -95,7 +95,7 @@ ImportWindow::ImportWindow(const QString &_file_name, const ImportedThings &impo
 
         emit import(file_name, imports);
     });
-    
+
 
     QVBoxLayout *vbox = new QVBoxLayout;
     vbox->addWidget(new QLabel("Import from:"));
@@ -125,7 +125,7 @@ ImportWindow::ImportWindow(const QString &_file_name, const ImportedThings &impo
     hbox->addWidget(cancel_button);
     hbox->addStretch(1);
     hbox->addWidget(import_button);
-    
+
     vbox->addLayout(hbox);
 
 
