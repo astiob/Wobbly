@@ -3885,16 +3885,12 @@ void WobblyWindow::realOpenVideo(const QString &path) {
 
         QString extension = path.mid(path.lastIndexOf('.') + 1);
 
-        QStringList mp4 = { "mp4", "m4v", "mov" };
-
         if (extension == "dgi")
             source_filter = "dgdecodenv.DGSource";
         else if (extension == "d2v")
             source_filter = "d2v.Source";
-        else if (mp4.contains(extension))
-            source_filter = "lsmas.LibavSMASHSource";
         else
-            source_filter = "lsmas.LWLibavSource";
+            source_filter = "bs.VideoSource";
 
         QString script = QStringLiteral(
                     "import vapoursynth as vs\n"
