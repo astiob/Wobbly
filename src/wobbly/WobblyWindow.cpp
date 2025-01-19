@@ -2179,6 +2179,7 @@ void WobblyWindow::createPatternGuessingWindow() {
     std::map<int, QString> use_patterns = {
         { PatternCCCNN, "CCCNN" },
         { PatternCCNNN, "CCNNN" },
+        { PatternCCCCN, "CCCCN" },
         { PatternCCCCC, "CCCCC" }
     };
     pg_use_patterns_buttons = new QButtonGroup(this);

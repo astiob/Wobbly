@@ -159,7 +159,7 @@ namespace Keys {
 
 WobblyProject::WobblyProject(bool _is_wobbly)
     : is_wobbly(_is_wobbly)
-    , pattern_guessing{ PatternGuessingFromMics, 10, UseThirdNMatchNever, DropFirstDuplicate, PatternCCCNN | PatternCCNNN | PatternCCCCC, FailedPatternGuessingMap() }
+    , pattern_guessing{ PatternGuessingFromMics, 10, UseThirdNMatchNever, DropFirstDuplicate, PatternCCCNN | PatternCCNNN | PatternCCCCN | PatternCCCCC, FailedPatternGuessingMap() }
     , combed_frames(new CombedFramesModel(this))
     , orphan_fields(new OrphanFieldsModel(this))
     , frozen_frames(new FrozenFramesModel(this))
@@ -303,6 +303,7 @@ void WobblyProject::writeProject(const std::string &path, bool compact_project) 
             std::map<int, std::string> use_patterns = {
                 { PatternCCCNN, "cccnn" },
                 { PatternCCNNN, "ccnnn" },
+                { PatternCCCCN, "ccccn" },
                 { PatternCCCCC, "ccccc" }
             };
 
@@ -842,6 +843,7 @@ void WobblyProject::readProject(const std::string &path) {
                 std::unordered_map<std::string, int> use_patterns = {
                     { "cccnn", PatternCCCNN },
                     { "ccnnn", PatternCCNNN },
+                    { "ccccn", PatternCCCCN },
                     { "ccccc", PatternCCCCC }
                 };
 
@@ -3266,6 +3268,7 @@ bool WobblyProject::guessSectionPatternsFromMics(int section_start, int minimum_
     std::vector<Pattern> patterns = {
         { "cccnn", -1, INT_MAX },
         { "ccnnn", -1, INT_MAX },
+        { "ccccn", -1, INT_MAX },
         { "c",     -1, INT_MAX }
     };
 
@@ -3276,6 +3279,8 @@ bool WobblyProject::guessSectionPatternsFromMics(int section_start, int minimum_
         if (patterns[p].pattern == "cccnn" && !(use_patterns & PatternCCCNN))
             continue;
         if (patterns[p].pattern == "ccnnn" && !(use_patterns & PatternCCNNN))
+            continue;
+        if (patterns[p].pattern == "ccccn" && !(use_patterns & PatternCCCCN))
             continue;
         if (patterns[p].pattern == "c" && !(use_patterns & PatternCCCCC))
             continue;
@@ -3387,6 +3392,7 @@ bool WobblyProject::guessSectionPatternsFromDMetrics(int section_start, int mini
     std::vector<Pattern> patterns = {
         { "cccnn", -1, INT_MAX, INT_MAX },
         { "ccnnn", -1, INT_MAX, INT_MAX },
+        { "ccccn", -1, INT_MAX, INT_MAX },
         { "c",     -1, INT_MAX, INT_MAX }
     };
 
@@ -3397,6 +3403,8 @@ bool WobblyProject::guessSectionPatternsFromDMetrics(int section_start, int mini
         if (patterns[p].pattern == "cccnn" && !(use_patterns & PatternCCCNN))
             continue;
         if (patterns[p].pattern == "ccnnn" && !(use_patterns & PatternCCNNN))
+            continue;
+        if (patterns[p].pattern == "ccccn" && !(use_patterns & PatternCCCCN))
             continue;
         if (patterns[p].pattern == "c" && !(use_patterns & PatternCCCCC))
             continue;
@@ -3526,12 +3534,14 @@ bool WobblyProject::guessSectionPatternsFromMicsAndDMetrics(int section_start, i
     std::vector<MicsPattern> mics_patterns = {
         { "cccnn", -1, INT_MAX },
         { "ccnnn", -1, INT_MAX },
+        { "ccccn", -1, INT_MAX },
         { "c",     -1, INT_MAX }
     };
 
     std::vector<DMetPattern> dmet_patterns = {
         { "cccnn", -1, INT_MAX, INT_MAX },
         { "ccnnn", -1, INT_MAX, INT_MAX },
+        { "ccccn", -1, INT_MAX, INT_MAX },
         { "c",     -1, INT_MAX, INT_MAX }
     };
 
@@ -3544,6 +3554,8 @@ bool WobblyProject::guessSectionPatternsFromMicsAndDMetrics(int section_start, i
         if (mics_patterns[p].pattern == "cccnn" && !(use_patterns & PatternCCCNN))
             continue;
         if (mics_patterns[p].pattern == "ccnnn" && !(use_patterns & PatternCCNNN))
+            continue;
+        if (mics_patterns[p].pattern == "ccccn" && !(use_patterns & PatternCCCCN))
             continue;
         if (mics_patterns[p].pattern == "c" && !(use_patterns & PatternCCCCC))
             continue;

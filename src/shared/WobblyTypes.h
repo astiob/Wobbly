@@ -160,7 +160,8 @@ enum DropDuplicate {
 enum Patterns {
     PatternCCCNN = 1 << 0,
     PatternCCNNN = 1 << 1,
-    PatternCCCCC = 1 << 2
+    PatternCCCCN = 1 << 2,
+    PatternCCCCC = 1 << 3
 };
 
 
