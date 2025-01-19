@@ -4852,6 +4852,29 @@ void WobblyWindow::updateFrameDetails() {
         }
     }
 
+    bool unique_12fps_pattern = false;
+    if (!unique_pattern) {
+        int i = matches_start;
+        char match = 'c';
+        while (i <= matches_end && i - matches_start <= 4 && (match = project->getMatch(i)) == 'c')
+            i++;
+        if (match == 'n' || match == 'b') {
+            unique_12fps_pattern = true;
+            pattern_offset = i - matches_start;
+            while (++i <= matches_end) {
+                match = project->getMatch(i);
+                bool is_expected =
+                    (i - matches_start - pattern_offset) % 5
+                        ? match == 'c'
+                        : match == 'n' || match == 'b';
+                if (!is_expected) {
+                    unique_12fps_pattern = false;
+                    break;
+                }
+            }
+        }
+    }
+
     int frame_halftime_after_decimation = project->frameNumberAfterDecimation(current_frame) * 10 + 5;
     if (project->isDecimatedFrame(current_frame) && current_frame == project->getNumFrames(PostSource) - 1)
         frame_halftime_after_decimation += 10;
@@ -4871,6 +4894,13 @@ void WobblyWindow::updateFrameDetails() {
             frame_halftime_before_decimation -= 10;
         else if (current_frame == section_end && !forward_pattern && index_within_pattern <= 1 && match != 'b')
             frame_halftime_before_decimation += 10;
+    } else if (unique_12fps_pattern) {
+        int index_within_pattern = (current_frame - matches_start - pattern_offset + 10) % 5;
+        frame_halftime_before_decimation += 2 * index_within_pattern - 1;
+
+        char match = project->getMatch(current_frame);
+        if (match == 'n')
+            frame_halftime_before_decimation += 10;
     } else {
         switch (project->getMatch(current_frame)) {
         case 'n':
@@ -4888,7 +4918,7 @@ void WobblyWindow::updateFrameDetails() {
 
     QString offset("Offset (240 Hz): ");
     offset += QString::number(frame_halftime_after_decimation - frame_halftime_before_decimation);
-    if (!unique_pattern)
+    if (!unique_pattern && !unique_12fps_pattern)
         offset += " (failed to identify pattern)";
     offset_label->setText(offset);
 
