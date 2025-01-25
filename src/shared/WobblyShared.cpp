@@ -64,7 +64,7 @@ static PluginDetectionInfo requiredPlugins[] = {
     {"FieldHint", "com.nodame.fieldhint", "FieldHint", nullptr},
     {"TDeintMod", "com.holywu.tdeintmod", "IsCombed", nullptr},
     {"d2vsource", "com.sources.d2vsource", "Source", nullptr},
-    {"BestSource", "com.vapoursynth.bestsource", "VideoSource", nullptr},
+    {"L-SMASH-Works", "systems.innocent.lsmas", "LibavSMASHSource", "LWLibavSource"},
     {"DGDecNV", "com.vapoursynth.dgdecodenv", "DGSource", nullptr}
 };
 
