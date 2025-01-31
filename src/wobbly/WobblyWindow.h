@@ -171,6 +171,7 @@ private:
 
     DockWidget *orphan_dock;
     TableView *orphan_view;
+    QSortFilterProxyModel *orphan_proxy;
 
     DockWidget *bookmarks_dock;
     TableView *bookmarks_view;

@@ -2666,7 +2666,48 @@ void WobblyWindow::createCombedFramesWindow() {
 
 
 void WobblyWindow::createOrphanFieldsWindow() {
+    QGroupBox *decimated_group = new QGroupBox("Show decimated");
+    decimated_group->setCheckable(false);
+
+    decimated_buttons = new QButtonGroup(this);
+    decimated_buttons->setExclusive(false);
+    const char *decimated[] = { "N&o", "&Yes" };
+    for (int i = 0; i < 2; i++) {
+        QCheckBox *checkbox = new QCheckBox(decimated[i]);
+        checkbox->setChecked(true);
+        decimated_buttons->addButton(checkbox, i);
+    }
+
+    QGroupBox *type_group = new QGroupBox("Show type");
+    type_group->setCheckable(false);
+
+    type_buttons = new QButtonGroup(this);
+    type_buttons->setExclusive(false);
+    const char *type[] = { "&n", "&b" };
+    for (int i = 0; i < 2; i++) {
+        QCheckBox *checkbox = new QCheckBox(type[i]);
+        checkbox->setChecked(true);
+        type_buttons->addButton(checkbox, i);
+    }
+
     orphan_view = new TableView;
+    orphan_proxy = new OrphanFieldsSortFilterModel(this);
+    orphan_view->setModel(orphan_proxy);
+
+    connect(decimated_buttons, static_cast<void (QButtonGroup::*)(int)>(&QButtonGroup::idClicked), [this] (int id) {
+        std::array<bool, 2> shown_decimated;
+        for (int i = 0; i < 2; i++)
+            shown_decimated[i] = decimated_buttons->button(i)->isChecked();
+
+        if (!shown_decimated[0] && !shown_decimated[1]) {
+            decimated_buttons->button(!id)->setChecked(true);
+            shown_decimated[!id] = true;
+        }
+
+        orphan_view->model()->setShownDecimated(shown_decimated);
+
+        updateFrameRatesViewer();
+    });
 
     connect(orphan_view, &TableView::doubleClicked, [this] (const QModelIndex &index) {
         bool ok;
@@ -3756,7 +3797,7 @@ void WobblyWindow::initialiseCombedFramesWindow() {
 
 
 void WobblyWindow::initialiseOrphanFieldsWindow() {
-    orphan_view->setModel(project->getOrphanFieldsModel());
+    orphan_proxy->setSourceModel(project->getOrphanFieldsModel());
 
     orphan_view->resizeColumnsToContents();
 }
