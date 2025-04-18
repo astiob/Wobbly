@@ -2695,16 +2695,18 @@ void WobblyWindow::createOrphanFieldsWindow() {
     orphan_view->setModel(orphan_proxy);
 
     connect(decimated_buttons, static_cast<void (QButtonGroup::*)(int)>(&QButtonGroup::idClicked), [this] (int id) {
-        std::array<bool, 2> shown_decimated;
+        QString shown_decimated;
+        shown_decimated.reserve(2);
         for (int i = 0; i < 2; i++)
-            shown_decimated[i] = decimated_buttons->button(i)->isChecked();
+            if (decimated_buttons->button(i)->isChecked())
+                shown_decimated += decimated_buttons->button(i)->text()[0];
 
-        if (!shown_decimated[0] && !shown_decimated[1]) {
+        if (shown_decimated.isEmpty()) {
             decimated_buttons->button(!id)->setChecked(true);
-            shown_decimated[!id] = true;
+            shown_decimated += decimated_buttons->button(!id)->text()[0];
         }
 
-        orphan_view->model()->setShownDecimated(shown_decimated);
+        orphan_proxy->setShownDecimated(shown_decimated);
 
         updateFrameRatesViewer();
     });
