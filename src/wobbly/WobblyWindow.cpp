@@ -2197,11 +2197,20 @@ void WobblyWindow::createPatternGuessingWindow() {
     pg_failures_table->setHorizontalHeaderLabels({ "Section", "Reason for failure" });
 
 
-    connect(pg_use_patterns_buttons, static_cast<void (QButtonGroup::*)(int, bool)>(&QButtonGroup::idToggled), [this] (int id, bool checked) {
-        if (id == PatternCCCNN && !checked && !pg_use_patterns_buttons->button(PatternCCNNN)->isChecked())
-            pg_use_patterns_buttons->button(PatternCCNNN)->setChecked(true);
-        else if (id == PatternCCNNN && !checked && !pg_use_patterns_buttons->button(PatternCCCNN)->isChecked())
-            pg_use_patterns_buttons->button(PatternCCCNN)->setChecked(true);
+    connect(pg_use_patterns_buttons, static_cast<void (QButtonGroup::*)(int, bool)>(&QButtonGroup::idToggled), [this, &use_patterns] (int id, bool checked) {
+        bool any_checked = false;
+        for (auto it = use_patterns.cbegin(); it != use_patterns.cend(); it++) {
+            if (pg_use_patterns_buttons->button(it->first)->isChecked()) {
+                any_checked = true;
+                break;
+            }
+        }
+        if (!any_checked) {
+            if (id == PatternCCCNN)
+                pg_use_patterns_buttons->button(PatternCCNNN)->setChecked(true);
+            else
+                pg_use_patterns_buttons->button(PatternCCCNN)->setChecked(true);
+        }
     });
 
     connect(pg_process_section_button, &QPushButton::clicked, [this] () {
