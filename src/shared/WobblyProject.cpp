@@ -1517,10 +1517,10 @@ void WobblyProject::deleteFreezeFrame(int frame) {
 
 
 const FreezeFrame *WobblyProject::findFreezeFrame(int frame) const {
-    if (!frozen_frames->size())
-        return nullptr;
-
     auto it = frozen_frames->upper_bound(frame);
+
+    if (it == frozen_frames->cbegin())
+        return nullptr;
 
     it--;
 
