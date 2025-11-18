@@ -2198,10 +2198,12 @@ void WobblyWindow::createPatternGuessingWindow() {
 
 
     connect(pg_use_patterns_buttons, static_cast<void (QButtonGroup::*)(int, bool)>(&QButtonGroup::idToggled), [this] (int id, bool checked) {
-        if (id == PatternCCCNN && !checked && !pg_use_patterns_buttons->button(PatternCCNNN)->isChecked())
-            pg_use_patterns_buttons->button(PatternCCNNN)->setChecked(true);
-        else if (id == PatternCCNNN && !checked && !pg_use_patterns_buttons->button(PatternCCCNN)->isChecked())
-            pg_use_patterns_buttons->button(PatternCCCNN)->setChecked(true);
+        if (pg_use_patterns_buttons->checkedId() == -1) {
+            if (id == PatternCCCNN)
+                pg_use_patterns_buttons->button(PatternCCNNN)->setChecked(true);
+            else
+                pg_use_patterns_buttons->button(PatternCCCNN)->setChecked(true);
+        }
     });
 
     connect(pg_process_section_button, &QPushButton::clicked, [this] () {
